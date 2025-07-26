@@ -94,12 +94,12 @@ static struct option builtin_help_options[] = {
 };
 
 static const char * const builtin_help_usage[] = {
-	"git help [-a|--all] [--[no-]verbose] [--[no-]external-commands] [--[no-]aliases]",
-	N_("git help [[-i|--info] [-m|--man] [-w|--web]] [<command>|<doc>]"),
-	"git help [-g|--guides]",
-	"git help [-c|--config]",
-	"git help [--user-interfaces]",
-	"git help [--developer-interfaces]",
+	"bench help [-a|--all] [--[no-]verbose] [--[no-]external-commands] [--[no-]aliases]",
+	N_("bench help [[-i|--info] [-m|--man] [-w|--web]] [<command>|<doc>]"),
+	"bench help [-g|--guides]",
+	"bench help [-c|--config]",
+	"bench help [--user-interfaces]",
+	"bench help [--developer-interfaces]",
 	NULL
 };
 
@@ -434,7 +434,7 @@ static int is_git_command(const char *s)
 	if (is_builtin(s))
 		return 1;
 
-	load_command_list("git-", &main_cmds, &other_cmds);
+	load_command_list("bench-", &main_cmds, &other_cmds);
 	return is_in_cmdlist(&main_cmds, s) ||
 		is_in_cmdlist(&other_cmds, s);
 }
@@ -442,15 +442,15 @@ static int is_git_command(const char *s)
 static const char *cmd_to_page(const char *git_cmd)
 {
 	if (!git_cmd)
-		return "git";
-	else if (starts_with(git_cmd, "git"))
+		return "bench";
+	else if (starts_with(git_cmd, "bench"))
 		return git_cmd;
 	else if (is_git_command(git_cmd))
-		return xstrfmt("git-%s", git_cmd);
+		return xstrfmt("bench-%s", git_cmd);
 	else if (!strcmp("scalar", git_cmd))
 		return xstrdup(git_cmd);
 	else
-		return xstrfmt("git%s", git_cmd);
+		return xstrfmt("bench%s", git_cmd);
 }
 
 static void setup_man_path(void)
@@ -664,7 +664,7 @@ int cmd_help(int argc,
 			return 0;
 		}
 		printf(_("usage: %s%s"), _(git_usage_string), "\n\n");
-		load_command_list("git-", &main_cmds, &other_cmds);
+		load_command_list("bench-", &main_cmds, &other_cmds);
 		list_commands(&main_cmds, &other_cmds);
 		printf("%s\n", _(git_more_info_string));
 		break;
@@ -694,7 +694,7 @@ int cmd_help(int argc,
 		opt_mode_usage(argc, "--config", help_format);
 		setup_pager(the_repository);
 		list_config_help(SHOW_CONFIG_HUMAN);
-		printf("\n%s\n", _("'git help config' for more information"));
+		printf("\n%s\n", _("'bench help config' for more information"));
 		return 0;
 	}
 

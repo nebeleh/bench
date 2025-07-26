@@ -1986,7 +1986,7 @@ static enum path_treatment treat_directory(struct dir_struct *dir,
 
 		if (nested_repo) {
 			char *real_dirname, *real_gitdir;
-			strbuf_addstr(&sb, ".git");
+			strbuf_addstr(&sb, ".bench");
 			real_dirname = real_pathdup(sb.buf, 1);
 			real_gitdir = real_pathdup(the_repository->gitdir, 1);
 
@@ -2399,7 +2399,7 @@ static enum path_treatment treat_path(struct dir_struct *dir,
 	if (!cdir->d_name)
 		return treat_path_fast(dir, cdir, istate, path,
 				       baselen, pathspec);
-	if (is_dot_or_dotdot(cdir->d_name) || !fspathcmp(cdir->d_name, ".git"))
+	if (is_dot_or_dotdot(cdir->d_name) || !fspathcmp(cdir->d_name, ".bench"))
 		return path_none;
 	strbuf_setlen(path, baselen);
 	strbuf_addstr(path, cdir->d_name);
@@ -4075,7 +4075,7 @@ void connect_work_tree_and_git_dir(const char *work_tree_,
 	char *git_dir, *work_tree;
 
 	/* Prepare .git file */
-	strbuf_addf(&gitfile_sb, "%s/.git", work_tree_);
+	strbuf_addf(&gitfile_sb, "%s/.bench", work_tree_);
 	if (safe_create_leading_directories_const(the_repository, gitfile_sb.buf))
 		die(_("could not create directories for %s"), gitfile_sb.buf);
 

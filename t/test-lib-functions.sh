@@ -282,7 +282,7 @@ test_ref_exists () {
 		BUG "expected exactly one reference"
 	fi &&
 
-	git ${indir:+ -C "$indir"} show-ref --exists "$1"
+	bench ${indir:+ -C "$indir"} show-ref --exists "$1"
 }
 
 # Behaves the same as test_ref_exists, except that it checks for the absence of
@@ -392,26 +392,26 @@ test_commit () {
 	else
 		$echo "${3-$1}" >"$indir$file"
 	fi &&
-	git ${indir:+ -C "$indir"} add -- "$file" &&
+	bench ${indir:+ -C "$indir"} add -- "$file" &&
 	if test -z "$notick"
 	then
 		test_tick
 	fi &&
-	git ${indir:+ -C "$indir"} commit \
+	bench ${indir:+ -C "$indir"} commit \
 	    ${author:+ --author "$author"} \
 	    $signoff -m "$1" &&
 	case "$tag" in
 	none)
 		;;
 	light)
-		git ${indir:+ -C "$indir"} tag "${4:-$1}"
+		bench ${indir:+ -C "$indir"} tag "${4:-$1}"
 		;;
 	annotate)
 		if test -z "$notick"
 		then
 			test_tick
 		fi &&
-		git ${indir:+ -C "$indir"} tag -a -m "$1" "${4:-$1}"
+		bench ${indir:+ -C "$indir"} tag -a -m "$1" "${4:-$1}"
 		;;
 	esac
 }
@@ -423,8 +423,8 @@ test_merge () {
 	label="$1" &&
 	shift &&
 	test_tick &&
-	git merge -m "$label" "$@" &&
-	git tag "$label"
+	bench merge -m "$label" "$@" &&
+	bench tag "$label"
 }
 
 # Efficiently create <nr> commits, each with a unique number (from 1 to <nr>
@@ -504,7 +504,7 @@ test_commit_bulk () {
 	total=$1
 
 	add_from=
-	if git -C "$indir" rev-parse --quiet --verify "$ref"
+	if bench -C "$indir" rev-parse --quiet --verify "$ref"
 	then
 		add_from=t
 	fi
@@ -541,7 +541,7 @@ test_commit_bulk () {
 		total=$((total - 1))
 	done >"$tmpfile"
 
-	git -C "$indir" \
+	bench -C "$indir" \
 	    -c fastimport.unpacklimit=0 \
 	    fast-import <"$tmpfile" || return 1
 
@@ -552,7 +552,7 @@ test_commit_bulk () {
 	# tree, too.
 	if test "$ref" = "HEAD"
 	then
-		git -C "$indir" checkout -f HEAD || return 1
+		bench -C "$indir" checkout -f HEAD || return 1
 	fi
 
 }
@@ -563,7 +563,7 @@ test_commit_bulk () {
 
 test_chmod () {
 	chmod "$@" &&
-	git update-index --add "--chmod=$@"
+	bench update-index --add "--chmod=$@"
 }
 
 # Get the modebits from a file or directory, ignoring the setgid bit (g+s).
@@ -585,7 +585,7 @@ test_unconfig () {
 		config_dir=$1
 		shift
 	fi
-	git ${config_dir:+-C "$config_dir"} config --unset-all "$@"
+	bench ${config_dir:+-C "$config_dir"} config --unset-all "$@"
 	config_status=$?
 	case "$config_status" in
 	5) # ok, nothing to unset
@@ -614,12 +614,12 @@ test_config () {
 	fi
 
 	test_when_finished "test_unconfig ${config_dir:+-C '$config_dir'} ${is_worktree:+--worktree} '$1'" &&
-	git ${config_dir:+-C "$config_dir"} config ${is_worktree:+--worktree} "$@"
+	bench ${config_dir:+-C "$config_dir"} config ${is_worktree:+--worktree} "$@"
 }
 
 test_config_global () {
 	test_when_finished "test_unconfig --global '$1'" &&
-	git config --global "$@"
+	bench config --global "$@"
 }
 
 write_script () {
@@ -680,7 +680,7 @@ test_hook () {
 		shift
 	done &&
 
-	git_dir=$(git -C "$indir" rev-parse --absolute-git-dir) &&
+	git_dir=$(bench -C "$indir" rev-parse --absolute-git-dir) &&
 	hook_dir="$git_dir/hooks" &&
 	hook_file="$hook_dir/$1" &&
 	if test -n "$disable$remove"
@@ -1081,7 +1081,7 @@ test_stdout_line_count () {
 	ops="$1" &&
 	val="$2" &&
 	shift 2 &&
-	if ! trashdir="$(git rev-parse --git-dir)/trash"; then
+	if ! trashdir="$(bench rev-parse --git-dir)/trash"; then
 		BUG "expect to be run inside a worktree"
 	fi &&
 	mkdir -p "$trashdir" &&
@@ -1137,7 +1137,7 @@ test_must_fail_acceptable () {
 	fi
 
 	case "$1" in
-	git|__git*|scalar|test-tool|test_terminal)
+	git|bench|__git*|__bench*|scalar|test-tool|test_terminal)
 		return 0
 		;;
 	*)
@@ -1189,7 +1189,7 @@ test_must_fail () {
 	esac
 	if ! test_must_fail_acceptable "$@"
 	then
-		echo >&7 "test_must_fail: only 'git' is allowed: $*"
+		echo >&7 "test_must_fail: only 'git' or 'bench' is allowed: $*"
 		return 1
 	fi
 	"$@" 2>&7
@@ -1302,7 +1302,7 @@ test_cmp_config () {
 	fi &&
 	printf "%s\n" "$1" >expect.config &&
 	shift &&
-	git $GD config "$@" >actual.config &&
+	bench $GD config "$@" >actual.config &&
 	test_cmp expect.config actual.config
 }
 
@@ -1382,8 +1382,8 @@ test_cmp_rev () {
 		BUG "test_cmp_rev requires two revisions, but got $#"
 	else
 		local r1 r2
-		r1=$(git rev-parse --verify "$1") &&
-		r2=$(git rev-parse --verify "$2") || return 1
+		r1=$(bench rev-parse --verify "$1") &&
+		r2=$(bench rev-parse --verify "$2") || return 1
 
 		if ! test "$r1" "$op" "$r2"
 		then
@@ -1426,7 +1426,7 @@ test_commit_message () {
 		BUG "Usage: test_commit_message <rev> [-m <message> | <file>]"
 		;;
 	esac
-	git show --no-patch --pretty=format:%B "$1" -- >actual.msg &&
+	bench show --no-patch --pretty=format:%B "$1" -- >actual.msg &&
 	test_cmp "$msg_file" actual.msg
 }
 
@@ -1437,7 +1437,7 @@ test_cmp_fspath () {
 		return 0
 	fi
 
-	if test true != "$(git config --get --type=bool core.ignorecase)"
+	if test true != "$(bench config --get --type=bool core.ignorecase)"
 	then
 		return 1
 	fi
@@ -1543,7 +1543,7 @@ test_atexit () {
 # Deprecated wrapper for "git init", use "git init" directly instead
 # Usage: test_create_repo <directory>
 test_create_repo () {
-	git init "$@"
+	bench init "$@"
 }
 
 # This function helps on symlink challenged file systems when it is not
@@ -1555,13 +1555,13 @@ test_ln_s_add () {
 	if test_have_prereq SYMLINKS
 	then
 		ln -s "$1" "$2" &&
-		git update-index --add "$2"
+		bench update-index --add "$2"
 	else
 		printf '%s' "$1" >"$2" &&
-		ln_s_obj=$(git hash-object -w "$2") &&
-		git update-index --add --cacheinfo 120000 $ln_s_obj "$2" &&
+		ln_s_obj=$(bench hash-object -w "$2") &&
+		bench update-index --add --cacheinfo 120000 $ln_s_obj "$2" &&
 		# pick up stat info from the file
-		git update-index "$2"
+		bench update-index "$2"
 	fi
 }
 
@@ -2039,8 +2039,8 @@ test_is_magic_mtime () {
 # and compare the sorted output of those commands. Useful when
 # wanting to ignore whitespace differences and sorting concerns.
 test_cmp_config_output () {
-	git config --list --file="$1" >config-expect &&
-	git config --list --file="$2" >config-actual &&
+	bench config --list --file="$1" >config-expect &&
+	bench config --list --file="$2" >config-actual &&
 	sort config-expect >sorted-expect &&
 	sort config-actual >sorted-actual &&
 	test_cmp sorted-expect sorted-actual

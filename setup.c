@@ -462,7 +462,7 @@ int is_nonbare_repository_dir(struct strbuf *path)
 	size_t orig_path_len = path->len;
 	assert(orig_path_len != 0);
 	strbuf_complete(path, '/');
-	strbuf_addstr(path, ".git");
+	strbuf_addstr(path, ".bench");
 	if (read_gitfile_gently(path->buf, &gitfile_error) || is_git_directory(path->buf))
 		ret = 1;
 	if (gitfile_error == READ_GITFILE_ERR_OPEN_FAILED ||
@@ -903,7 +903,7 @@ void read_gitfile_error_die(int error_code, const char *path, const char *dir)
 	case READ_GITFILE_ERR_OPEN_FAILED:
 		die_errno(_("error opening '%s'"), path);
 	case READ_GITFILE_ERR_TOO_LARGE:
-		die(_("too large to be a .git file: '%s'"), path);
+		die(_("too large to be a .bench file: '%s'"), path);
 	case READ_GITFILE_ERR_READ_FAILED:
 		die(_("error reading %s"), path);
 	case READ_GITFILE_ERR_INVALID_FORMAT:
@@ -918,7 +918,7 @@ void read_gitfile_error_die(int error_code, const char *path, const char *dir)
 }
 
 /*
- * Try to read the location of the git directory from the .git file,
+ * Try to read the location of the git directory from the .bench file,
  * return path to git directory if found. The return value comes from
  * a shared buffer.
  *
@@ -1266,7 +1266,7 @@ static int safe_directory_cb(const char *key, const char *value,
 			}
 
 			/*
-			 * A .gitconfig in $HOME may be shared across
+			 * A .benchconfig in $HOME may be shared across
 			 * different machines and safe.directory entries
 			 * may or may not exist as paths on all of these
 			 * machines.  In other words, it is not a warning
@@ -1399,24 +1399,24 @@ static const char *allowed_bare_repo_to_string(
 static int is_implicit_bare_repo(const char *path)
 {
 	/*
-	 * what we found is a ".git" directory at the root of
+	 * what we found is a ".bench" directory at the root of
 	 * the working tree.
 	 */
-	if (ends_with_path_components(path, ".git"))
+	if (ends_with_path_components(path, ".bench"))
 		return 1;
 
 	/*
 	 * we are inside $GIT_DIR of a secondary worktree of a
 	 * non-bare repository.
 	 */
-	if (strstr(path, "/.git/worktrees/"))
+	if (strstr(path, "/.bench/worktrees/"))
 		return 1;
 
 	/*
 	 * we are inside $GIT_DIR of a worktree of a non-embedded
 	 * submodule, whose superproject is not a bare repository.
 	 */
-	if (strstr(path, "/.git/modules/"))
+	if (strstr(path, "/.bench/modules/"))
 		return 1;
 
 	return 0;
@@ -1432,7 +1432,7 @@ static int is_implicit_bare_repo(const char *path)
  * The directory where the search should start needs to be passed in via the
  * `dir` parameter; upon return, the `dir` buffer will contain the path of
  * the directory where the search ended, and `gitdir` will contain the path of
- * the discovered .git/ directory, if any. If `gitdir` is not absolute, it
+ * the discovered .bench/ directory, if any. If `gitdir` is not absolute, it
  * is relative to `dir` (i.e. *not* necessarily the cwd).
  */
 static enum discovery_result setup_git_directory_gently_1(struct strbuf *dir,
@@ -1479,13 +1479,13 @@ static enum discovery_result setup_git_directory_gently_1(struct strbuf *dir,
 
 	/*
 	 * Test in the following order (relative to the dir):
-	 * - .git (file containing "gitdir: <path>")
-	 * - .git/
+	 * - .bench (file containing "gitdir: <path>")
+	 * - .bench/
 	 * - ./ (bare)
-	 * - ../.git
-	 * - ../.git/
+	 * - ../.bench
+	 * - ../.bench/
 	 * - ../ (bare)
-	 * - ../../.git
+	 * - ../../.bench
 	 *   etc.
 	 */
 	one_filesystem = !git_env_bool("GIT_DISCOVERY_ACROSS_FILESYSTEM", 0);
@@ -1504,7 +1504,7 @@ static enum discovery_result setup_git_directory_gently_1(struct strbuf *dir,
 		if (!gitdirenv) {
 			if (die_on_error ||
 			    error_code == READ_GITFILE_ERR_NOT_A_FILE) {
-				/* NEEDSWORK: fail if .git is not file nor dir */
+				/* NEEDSWORK: fail if .bench is not file nor dir */
 				if (is_git_directory(dir->buf)) {
 					gitdirenv = DEFAULT_GIT_DIR_ENVIRONMENT;
 					gitdir_path = xstrdup(dir->buf);
@@ -2087,11 +2087,11 @@ static void copy_templates_1(struct strbuf *path, struct strbuf *template_path,
 	size_t template_baselen = template_path->len;
 	struct dirent *de;
 
-	/* Note: if ".git/hooks" file exists in the repository being
+	/* Note: if ".bench/hooks" file exists in the repository being
 	 * re-initialized, /etc/core-git/templates/hooks/update would
 	 * cause "git init" to fail here.  I think this is sane but
 	 * it means that the set of templates we ship by default, along
-	 * with the way the namespace under .git/ is organized, should
+	 * with the way the namespace under .bench/ is organized, should
 	 * be really carefully chosen.
 	 */
 	safe_create_dir(the_repository, path->buf, 1);
@@ -2206,10 +2206,10 @@ free_return:
  */
 static int needs_work_tree_config(const char *git_dir, const char *work_tree)
 {
-	if (!strcmp(work_tree, "/") && !strcmp(git_dir, "/.git"))
+	if (!strcmp(work_tree, "/") && !strcmp(git_dir, "/.bench"))
 		return 0;
 	if (skip_prefix(git_dir, work_tree, &git_dir) &&
-	    !strcmp(git_dir, "/.git"))
+	    !strcmp(git_dir, "/.bench"))
 		return 0;
 	return 1;
 }

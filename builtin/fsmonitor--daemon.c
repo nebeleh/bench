@@ -997,9 +997,9 @@ static int handle_client(void *data,
 enum fsmonitor_path_type fsmonitor_classify_path_workdir_relative(
 	const char *rel)
 {
-	if (fspathncmp(rel, ".git", 4))
+	if (fspathncmp(rel, ".bench", 6))
 		return IS_WORKDIR_PATH;
-	rel += 4;
+	rel += 6;
 
 	if (!*rel)
 		return IS_DOT_GIT;

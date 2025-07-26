@@ -32,12 +32,12 @@ static int guess_repository_type(const char *git_dir)
 	if (cwd_is_git_dir)
 		return 1;
 	/*
-	 * "GIT_DIR=.git or GIT_DIR=something/.git is usually not.
+	 * "GIT_DIR=.bench or GIT_DIR=something/.bench is usually not.
 	 */
-	if (!strcmp(git_dir, ".git"))
+	if (!strcmp(git_dir, ".bench"))
 		return 0;
 	slash = strrchr(git_dir, '/');
-	if (slash && !strcmp(slash, "/.git"))
+	if (slash && !strcmp(slash, "/.bench"))
 		return 0;
 
 	/*
@@ -194,15 +194,15 @@ int cmd_init_db(int argc,
 		    GIT_DIR_ENVIRONMENT);
 
 	/*
-	 * Set up the default .git directory contents
+	 * Set up the default .bench directory contents
 	 */
 	if (!git_dir)
 		git_dir = xstrdup(DEFAULT_GIT_DIR_ENVIRONMENT);
 
 	/*
 	 * When --separate-git-dir is used inside a linked worktree, take
-	 * care to ensure that the common .git/ directory is relocated, not
-	 * the worktree-specific .git/worktrees/<id>/ directory.
+	 * care to ensure that the common .bench/ directory is relocated, not
+	 * the worktree-specific .bench/worktrees/<id>/ directory.
 	 */
 	if (real_git_dir) {
 		int err;
@@ -214,7 +214,7 @@ int cmd_init_db(int argc,
 			struct strbuf mainwt = STRBUF_INIT;
 
 			strbuf_addbuf(&mainwt, &sb);
-			strbuf_strip_suffix(&mainwt, "/.git");
+			strbuf_strip_suffix(&mainwt, "/.bench");
 			if (chdir(mainwt.buf) < 0)
 				die_errno(_("cannot chdir to %s"), mainwt.buf);
 			strbuf_release(&mainwt);

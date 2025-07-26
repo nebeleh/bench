@@ -134,14 +134,14 @@ export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
 ################################################################
 # It appears that people try to run tests without building...
-"${GIT_TEST_INSTALLED:-$GIT_BUILD_DIR}/git$X" >/dev/null
+"${GIT_TEST_INSTALLED:-$GIT_BUILD_DIR}/bench$X" >/dev/null
 if test $? != 1
 then
 	if test -n "$GIT_TEST_INSTALLED"
 	then
 		echo >&2 "error: there is no working Git at '$GIT_TEST_INSTALLED'"
 	else
-		echo >&2 'error: you do not seem to have built git yet.'
+		echo >&2 'error: you do not seem to have built bench yet.'
 	fi
 	exit 1
 fi
@@ -536,7 +536,7 @@ export GIT_COMMITTER_EMAIL GIT_COMMITTER_NAME
 export GIT_COMMITTER_DATE GIT_AUTHOR_DATE
 export EDITOR
 
-GIT_TEST_BUILTIN_HASH=$("$GIT_BUILD_DIR/git" version --build-options | sed -ne 's/^default-hash: //p')
+GIT_TEST_BUILTIN_HASH=$("$GIT_BUILD_DIR/bench" version --build-options | sed -ne 's/^default-hash: //p')
 GIT_DEFAULT_HASH="${GIT_TEST_DEFAULT_HASH:-$GIT_TEST_BUILTIN_HASH}"
 export GIT_DEFAULT_HASH
 GIT_DEFAULT_REF_FORMAT="${GIT_TEST_DEFAULT_REF_FORMAT:-files}"
@@ -1366,7 +1366,7 @@ then
 	# override all git executables in TEST_DIRECTORY/..
 	GIT_VALGRIND=$TEST_DIRECTORY/valgrind
 	mkdir -p "$GIT_VALGRIND"/bin
-	for file in $GIT_BUILD_DIR/git* $GIT_BUILD_DIR/t/helper/test-*
+	for file in $GIT_BUILD_DIR/bench* $GIT_BUILD_DIR/t/helper/test-*
 	do
 		make_valgrind_symlink $file
 	done
@@ -1393,8 +1393,8 @@ then
 	export GIT_VALGRIND_ENABLED
 elif test -n "$GIT_TEST_INSTALLED"
 then
-	GIT_EXEC_PATH=$($GIT_TEST_INSTALLED/git --exec-path)  ||
-	error "Cannot run git from $GIT_TEST_INSTALLED."
+	GIT_EXEC_PATH=$($GIT_TEST_INSTALLED/bench --exec-path)  ||
+	error "Cannot run bench from $GIT_TEST_INSTALLED."
 	PATH=$GIT_TEST_INSTALLED:$GIT_BUILD_DIR/t/helper:$PATH
 	GIT_EXEC_PATH=${GIT_TEST_EXEC_PATH:-$GIT_EXEC_PATH}
 else # normal case, use ../bin-wrappers only unless $with_dashes:
@@ -1403,11 +1403,11 @@ else # normal case, use ../bin-wrappers only unless $with_dashes:
 		with_dashes=t
 	else
 		git_bin_dir="$GIT_BUILD_DIR/bin-wrappers"
-		if ! test -x "$git_bin_dir/git"
+		if ! test -x "$git_bin_dir/bench"
 		then
 			if test -z "$with_dashes"
 			then
-				say "$git_bin_dir/git is not executable; using GIT_EXEC_PATH"
+				say "$git_bin_dir/bench is not executable; using GIT_EXEC_PATH"
 			fi
 			with_dashes=t
 		fi
@@ -1574,10 +1574,10 @@ remove_trash_directory "$TRASH_DIRECTORY" || {
 remove_trash=t
 if test -z "$TEST_NO_CREATE_REPO"
 then
-	git init \
+	bench init \
 	    ${TEST_CREATE_REPO_NO_TEMPLATE:+--template=} \
 	    "$TRASH_DIRECTORY" >&3 2>&4 ||
-	error "cannot run git init"
+	error "cannot run bench init"
 else
 	mkdir -p "$TRASH_DIRECTORY"
 fi

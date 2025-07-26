@@ -467,7 +467,7 @@ static int cmd_clone(int argc, const char **argv)
 		while (buf.len > 0 && is_dir_sep(buf.buf[buf.len - 1]))
 			strbuf_setlen(&buf, buf.len - 1);
 		/* Strip suffix `.git`, if any */
-		strbuf_strip_suffix(&buf, ".git");
+		strbuf_strip_suffix(&buf, ".bench");
 
 		enlistment = find_last_dir_sep(buf.buf);
 		if (!enlistment) {
@@ -881,16 +881,16 @@ static int cmd_unregister(int argc, const char **argv)
 	if (argc == 1) {
 		struct strbuf src_path = STRBUF_INIT, workdir_path = STRBUF_INIT;
 
-		strbuf_addf(&src_path, "%s/src/.git", argv[0]);
-		strbuf_addf(&workdir_path, "%s/.git", argv[0]);
+		strbuf_addf(&src_path, "%s/src/.bench", argv[0]);
+		strbuf_addf(&workdir_path, "%s/.bench", argv[0]);
 		if (!is_directory(src_path.buf) && !is_directory(workdir_path.buf)) {
 			/* remove possible matching registrations */
 			int res = -1;
 
-			strbuf_strip_suffix(&src_path, "/.git");
+			strbuf_strip_suffix(&src_path, "/.bench");
 			res = remove_deleted_enlistment(&src_path) && res;
 
-			strbuf_strip_suffix(&workdir_path, "/.git");
+			strbuf_strip_suffix(&workdir_path, "/.bench");
 			res = remove_deleted_enlistment(&workdir_path) && res;
 
 			strbuf_release(&src_path);

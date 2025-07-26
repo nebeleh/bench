@@ -97,7 +97,7 @@ static struct worktree *get_main_worktree(int skip_reading_head)
 	struct strbuf worktree_path = STRBUF_INIT;
 
 	strbuf_add_real_path(&worktree_path, repo_get_common_dir(the_repository));
-	strbuf_strip_suffix(&worktree_path, "/.git");
+	strbuf_strip_suffix(&worktree_path, "/.bench");
 
 	CALLOC_ARRAY(worktree, 1);
 	worktree->repo = the_repository;
@@ -133,7 +133,7 @@ struct worktree *get_linked_worktree(const char *id,
 		/* invalid gitdir file */
 		goto done;
 	strbuf_rtrim(&worktree_path);
-	strbuf_strip_suffix(&worktree_path, "/.git");
+	strbuf_strip_suffix(&worktree_path, "/.bench");
 
 	if (!is_absolute_path(worktree_path.buf)) {
 		strbuf_strip_suffix(&path, "gitdir");
@@ -346,7 +346,7 @@ int validate_worktree(const struct worktree *wt, struct strbuf *errmsg,
 	char *path = NULL;
 	int err, ret = -1;
 
-	strbuf_addf(&wt_path, "%s/.git", wt->path);
+	strbuf_addf(&wt_path, "%s/.bench", wt->path);
 
 	if (is_main_worktree(wt)) {
 		if (is_directory(wt_path.buf)) {
@@ -354,10 +354,10 @@ int validate_worktree(const struct worktree *wt, struct strbuf *errmsg,
 			goto done;
 		}
 		/*
-		 * Main worktree using .git file to point to the
+		 * Main worktree using .bench file to point to the
 		 * repository would make it impossible to know where
 		 * the actual worktree is if this function is executed
-		 * from another worktree. No .git file support for now.
+		 * from another worktree. No .bench file support for now.
 		 */
 		strbuf_addf_gently(errmsg,
 				   _("'%s' at main working tree is not the repository directory"),
@@ -366,7 +366,7 @@ int validate_worktree(const struct worktree *wt, struct strbuf *errmsg,
 	}
 
 	/*
-	 * Make sure "gitdir" file points to a real .git file and that
+	 * Make sure "gitdir" file points to a real .bench file and that
 	 * file points back here.
 	 */
 	if (!is_absolute_path(wt->path)) {
@@ -389,7 +389,7 @@ int validate_worktree(const struct worktree *wt, struct strbuf *errmsg,
 
 	path = xstrdup_or_null(read_gitfile_gently(wt_path.buf, &err));
 	if (!path) {
-		strbuf_addf_gently(errmsg, _("'%s' is not a .git file, error code %d"),
+		strbuf_addf_gently(errmsg, _("'%s' is not a .bench file, error code %d"),
 				   wt_path.buf, err);
 		goto done;
 	}
@@ -423,7 +423,7 @@ void update_worktree_location(struct worktree *wt, const char *path_,
 	wt_gitdir = repo_common_path(the_repository, "worktrees/%s/gitdir", wt->id);
 	strbuf_realpath(&gitdir, wt_gitdir, 1);
 	strbuf_realpath(&path, path_, 1);
-	strbuf_addf(&dotgit, "%s/.git", path.buf);
+	strbuf_addf(&dotgit, "%s/.bench", path.buf);
 	if (fspathcmp(wt->path, path.buf)) {
 		write_worktree_linking_files(dotgit, gitdir, use_relative_paths);
 
@@ -633,7 +633,7 @@ static void repair_gitfile(struct worktree *wt,
 
 	path = repo_common_path(the_repository, "worktrees/%s", wt->id);
 	strbuf_realpath(&repo, path, 1);
-	strbuf_addf(&dotgit, "%s/.git", wt->path);
+	strbuf_addf(&dotgit, "%s/.bench", wt->path);
 	strbuf_addf(&gitdir, "%s/gitdir", repo.buf);
 	dotgit_contents = xstrdup_or_null(read_gitfile_gently(dotgit.buf, &err));
 
@@ -647,13 +647,13 @@ static void repair_gitfile(struct worktree *wt,
 	}
 
 	if (err == READ_GITFILE_ERR_NOT_A_FILE)
-		fn(1, wt->path, _(".git is not a file"), cb_data);
+		fn(1, wt->path, _(".bench is not a file"), cb_data);
 	else if (err)
-		repair = _(".git file broken");
+		repair = _(".bench file broken");
 	else if (fspathcmp(backlink.buf, repo.buf))
-		repair = _(".git file incorrect");
+		repair = _(".bench file incorrect");
 	else if (use_relative_paths == is_absolute_path(dotgit_contents))
-		repair = _(".git file absolute/relative path mismatch");
+		repair = _(".bench file absolute/relative path mismatch");
 
 	if (repair) {
 		fn(0, wt->path, repair, cb_data);
@@ -739,9 +739,9 @@ static int is_main_worktree_path(const char *path)
 	int cmp;
 
 	strbuf_add_real_path(&target, path);
-	strbuf_strip_suffix(&target, "/.git");
+	strbuf_strip_suffix(&target, "/.bench");
 	strbuf_add_real_path(&maindir, repo_get_common_dir(the_repository));
-	strbuf_strip_suffix(&maindir, "/.git");
+	strbuf_strip_suffix(&maindir, "/.bench");
 	cmp = fspathcmp(maindir.buf, target.buf);
 
 	strbuf_release(&maindir);
@@ -808,7 +808,7 @@ void repair_worktree_at_path(const char *path,
 	if (is_main_worktree_path(path))
 		goto done;
 
-	strbuf_addf(&dotgit, "%s/.git", path);
+	strbuf_addf(&dotgit, "%s/.bench", path);
 	if (!strbuf_realpath(&dotgit, dotgit.buf, 0)) {
 		fn(1, path, _("not a valid path"), cb_data);
 		goto done;
@@ -822,12 +822,12 @@ void repair_worktree_at_path(const char *path,
 			strbuf_addstr(&backlink, dotgit_contents);
 		} else {
 			strbuf_addbuf(&backlink, &dotgit);
-			strbuf_strip_suffix(&backlink, ".git");
+			strbuf_strip_suffix(&backlink, ".bench");
 			strbuf_addstr(&backlink, dotgit_contents);
 			strbuf_realpath_forgiving(&backlink, backlink.buf, 0);
 		}
 	} else if (err == READ_GITFILE_ERR_NOT_A_FILE) {
-		fn(1, dotgit.buf, _("unable to locate repository; .git is not a file"), cb_data);
+		fn(1, dotgit.buf, _("unable to locate repository; .bench is not a file"), cb_data);
 		goto done;
 	} else if (err == READ_GITFILE_ERR_NOT_A_REPO) {
 		if (inferred_backlink.len) {
@@ -840,11 +840,11 @@ void repair_worktree_at_path(const char *path,
 			 */
 			strbuf_swap(&backlink, &inferred_backlink);
 		} else {
-			fn(1, dotgit.buf, _("unable to locate repository; .git file does not reference a repository"), cb_data);
+			fn(1, dotgit.buf, _("unable to locate repository; .bench file does not reference a repository"), cb_data);
 			goto done;
 		}
 	} else {
-		fn(1, dotgit.buf, _("unable to locate repository; .git file broken"), cb_data);
+		fn(1, dotgit.buf, _("unable to locate repository; .bench file broken"), cb_data);
 		goto done;
 	}
 
@@ -1068,7 +1068,7 @@ void write_worktree_linking_files(struct strbuf dotgit, struct strbuf gitdir,
 	struct strbuf tmp = STRBUF_INIT;
 
 	strbuf_addbuf(&path, &dotgit);
-	strbuf_strip_suffix(&path, "/.git");
+	strbuf_strip_suffix(&path, "/.bench");
 	strbuf_realpath(&path, path.buf, 1);
 	strbuf_addbuf(&repo, &gitdir);
 	strbuf_strip_suffix(&repo, "/gitdir");
@@ -1083,10 +1083,10 @@ void write_worktree_linking_files(struct strbuf dotgit, struct strbuf gitdir,
 	}
 
 	if (use_relative_paths) {
-		write_file(gitdir.buf, "%s/.git", relative_path(path.buf, repo.buf, &tmp));
+		write_file(gitdir.buf, "%s/.bench", relative_path(path.buf, repo.buf, &tmp));
 		write_file(dotgit.buf, "gitdir: %s", relative_path(repo.buf, path.buf, &tmp));
 	} else {
-		write_file(gitdir.buf, "%s/.git", path.buf);
+		write_file(gitdir.buf, "%s/.bench", path.buf);
 		write_file(dotgit.buf, "gitdir: %s", repo.buf);
 	}
 

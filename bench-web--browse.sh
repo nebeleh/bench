@@ -21,7 +21,7 @@ USAGE='[--browser=browser|--tool=browser] [--config=conf.var] url/file ...'
 # This must be capable of running outside of git directory, so
 # the vanilla git-sh-setup should not be used.
 NONGIT_OK=Yes
-. git-sh-setup
+. bench-sh-setup
 
 valid_custom_tool()
 {

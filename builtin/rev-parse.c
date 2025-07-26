@@ -1030,13 +1030,13 @@ int cmd_rev_parse(int argc,
 						continue;
 					}
 					if (!prefix) {
-						print_path(".git", prefix, format, DEFAULT_UNMODIFIED);
+						print_path(".bench", prefix, format, DEFAULT_UNMODIFIED);
 						continue;
 					}
 				} else {		/* --absolute-git-dir */
 					wanted = FORMAT_CANONICAL;
 					if (!gitdir && !prefix)
-						gitdir = ".git";
+						gitdir = ".bench";
 					if (gitdir) {
 						struct strbuf realpath = STRBUF_INIT;
 						strbuf_realpath(&realpath, gitdir, 1);

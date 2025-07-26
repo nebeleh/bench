@@ -8,7 +8,7 @@ pwd="$(pwd)"
 
 expect_accepted_implicit () {
 	test_when_finished 'rm "$pwd/trace.perf"' &&
-	GIT_TRACE2_PERF="$pwd/trace.perf" git "$@" rev-parse --git-dir &&
+	GIT_TRACE2_PERF="$pwd/trace.perf" bench "$@" rev-parse --git-dir &&
 	# Note: we're intentionally only checking that the bare repo has a
 	# directory *prefix* of $pwd
 	grep -F "implicit-bare-repository:$pwd" "$pwd/trace.perf"
@@ -16,28 +16,28 @@ expect_accepted_implicit () {
 
 expect_accepted_explicit () {
 	test_when_finished 'rm "$pwd/trace.perf"' &&
-	GIT_DIR="$1" GIT_TRACE2_PERF="$pwd/trace.perf" git rev-parse --git-dir &&
+	GIT_DIR="$1" GIT_TRACE2_PERF="$pwd/trace.perf" bench rev-parse --git-dir &&
 	! grep -F "implicit-bare-repository:$pwd" "$pwd/trace.perf"
 }
 
 expect_rejected () {
 	test_when_finished 'rm "$pwd/trace.perf"' &&
 	test_env GIT_TRACE2_PERF="$pwd/trace.perf" \
-		test_must_fail git "$@" rev-parse --git-dir 2>err &&
+		test_must_fail bench "$@" rev-parse --git-dir 2>err &&
 	grep -F "cannot use bare repository" err &&
 	grep -F "implicit-bare-repository:$pwd" "$pwd/trace.perf"
 }
 
 test_expect_success 'setup an embedded bare repo, secondary worktree and submodule' '
-	git init outer-repo &&
-	git init --bare --initial-branch=main outer-repo/bare-repo &&
-	git -C outer-repo worktree add ../outer-secondary &&
+	bench init outer-repo &&
+	bench init --bare --initial-branch=main outer-repo/bare-repo &&
+	bench -C outer-repo worktree add ../outer-secondary &&
 	test_path_is_dir outer-secondary &&
 	(
 		cd outer-repo &&
 		test_commit A &&
-		git push bare-repo +HEAD:refs/heads/main &&
-		git -c protocol.file.allow=always \
+		bench push bare-repo +HEAD:refs/heads/main &&
+		bench -c protocol.file.allow=always \
 			submodule add --name subn -- ./bare-repo subd
 	) &&
 	test_path_is_dir outer-repo/.git/worktrees/outer-secondary &&
@@ -79,7 +79,7 @@ test_expect_success 'safe.bareRepository in included file' '
 	[safe]
 		bareRepository = explicit
 	EOF
-	git config --global --add include.path "$(pwd)/gitconfig-include" &&
+	bench config --global --add include.path "$(pwd)/gitconfig-include" &&
 	expect_rejected -C outer-repo/bare-repo
 '
 

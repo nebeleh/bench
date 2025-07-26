@@ -33,11 +33,11 @@ static uint32_t common_mask =
 	CAT_init | CAT_worktree | CAT_info |
 	CAT_history | CAT_remote;
 static struct category_description common_categories[] = {
-	{ CAT_init, N_("start a working area (see also: git help tutorial)") },
-	{ CAT_worktree, N_("work on the current change (see also: git help everyday)") },
-	{ CAT_info, N_("examine the history and state (see also: git help revisions)") },
+	{ CAT_init, N_("start a working area (see also: bench help tutorial)") },
+	{ CAT_worktree, N_("work on the current change (see also: bench help everyday)") },
+	{ CAT_info, N_("examine the history and state (see also: bench help revisions)") },
 	{ CAT_history, N_("grow, mark and tweak your common history") },
-	{ CAT_remote, N_("collaborate (see also: git help workflows)") },
+	{ CAT_remote, N_("collaborate (see also: bench help workflows)") },
 	{ 0, NULL }
 };
 static struct category_description main_categories[] = {
@@ -66,7 +66,7 @@ static const char *drop_prefix(const char *name, uint32_t category)
 		prefix = "git";
 		break;
 	default:
-		prefix = "git-";
+		prefix = "bench-";
 		break;
 	}
 	if (skip_prefix(name, prefix, &new_name))
@@ -364,7 +364,7 @@ void list_all_main_cmds(struct string_list *list)
 
 	memset(&main_cmds, 0, sizeof(main_cmds));
 	memset(&other_cmds, 0, sizeof(other_cmds));
-	load_command_list("git-", &main_cmds, &other_cmds);
+	load_command_list("bench-", &main_cmds, &other_cmds);
 
 	for (i = 0; i < main_cmds.cnt; i++)
 		string_list_append(list, main_cmds.names[i]->name);
@@ -380,7 +380,7 @@ void list_all_other_cmds(struct string_list *list)
 
 	memset(&main_cmds, 0, sizeof(main_cmds));
 	memset(&other_cmds, 0, sizeof(other_cmds));
-	load_command_list("git-", &main_cmds, &other_cmds);
+	load_command_list("bench-", &main_cmds, &other_cmds);
 
 	for (i = 0; i < other_cmds.cnt; i++)
 		string_list_append(list, other_cmds.names[i]->name);
@@ -530,7 +530,7 @@ void list_all_cmds_help(int show_external_commands, int show_aliases)
 {
 	int longest;
 
-	puts(_("See 'git help <command>' to read about a specific subcommand"));
+	puts(_("See 'bench help <command>' to read about a specific subcommand"));
 	putchar('\n');
 	print_cmd_by_category(main_categories, &longest);
 
@@ -633,8 +633,8 @@ static void add_cmd_list(struct cmdnames *cmds, struct cmdnames *old)
 #define SIMILAR_ENOUGH(x) ((x) < SIMILARITY_FLOOR)
 
 static const char bad_interpreter_advice[] =
-	N_("'%s' appears to be a git command, but we were not\n"
-	"able to execute it. Maybe git-%s is broken?");
+	N_("'%s' appears to be a bench command, but we were not\n"
+	"able to execute it. Maybe bench-%s is broken?");
 
 char *help_unknown_cmd(const char *cmd)
 {
@@ -653,11 +653,11 @@ char *help_unknown_cmd(const char *cmd)
 		cfg.autocorrect = AUTOCORRECT_NEVER;
 
 	if (cfg.autocorrect == AUTOCORRECT_NEVER) {
-		fprintf_ln(stderr, _("git: '%s' is not a git command. See 'git --help'."), cmd);
+		fprintf_ln(stderr, _("bench: '%s' is not a bench command. See 'bench --help'."), cmd);
 		exit(1);
 	}
 
-	load_command_list("git-", &main_cmds, &other_cmds);
+	load_command_list("bench-", &main_cmds, &other_cmds);
 
 	add_cmd_list(&main_cmds, &cfg.aliases);
 	add_cmd_list(&main_cmds, &other_cmds);
@@ -754,7 +754,7 @@ char *help_unknown_cmd(const char *cmd)
 		return assumed;
 	}
 
-	fprintf_ln(stderr, _("git: '%s' is not a git command. See 'git --help'."), cmd);
+	fprintf_ln(stderr, _("bench: '%s' is not a bench command. See 'bench --help'."), cmd);
 
 	if (SIMILAR_ENOUGH(best_similarity)) {
 		fprintf_ln(stderr,
@@ -777,7 +777,7 @@ void get_version_info(struct strbuf *buf, int show_build_options)
 	 *
 	 * Always show the version, even if other options are given.
 	 */
-	strbuf_addf(buf, "git version %s\n", git_version_string);
+	strbuf_addf(buf, "bench version %s, based on a fork from git %s\n", bench_version_string, git_version_string);
 
 	if (show_build_options) {
 		strbuf_addf(buf, "cpu: %s\n", GIT_HOST_CPU);
@@ -821,7 +821,7 @@ int cmd_version(int argc, const char **argv, const char *prefix, struct reposito
 	struct strbuf buf = STRBUF_INIT;
 	int build_options = 0;
 	const char * const usage[] = {
-		N_("git version [--build-options]"),
+		N_("bench version [--build-options]"),
 		NULL
 	};
 	struct option options[] = {

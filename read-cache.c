@@ -952,16 +952,20 @@ static int verify_dotfile(const char *rest, unsigned mode)
 	 * Once we've seen ".git", we can also find ".gitmodules", etc (also
 	 * case-insensitively).
 	 */
-	case 'g':
-	case 'G':
-		if (rest[1] != 'i' && rest[1] != 'I')
+	case 'b':
+	case 'B':
+		if (rest[1] != 'e' && rest[1] != 'E')
 			break;
-		if (rest[2] != 't' && rest[2] != 'T')
+		if (rest[2] != 'n' && rest[2] != 'N')
 			break;
-		if (rest[3] == '\0' || is_dir_sep(rest[3]))
+		if (rest[3] != 'c' && rest[3] != 'C')
+			break;
+		if (rest[4] != 'h' && rest[4] != 'H')
+			break;
+		if (rest[5] == '\0' || is_dir_sep(rest[5]))
 			return 0;
 		if (S_ISLNK(mode)) {
-			rest += 3;
+			rest += 5;
 			if (skip_iprefix(rest, "modules", &rest) &&
 			    (*rest == '\0' || is_dir_sep(*rest)))
 				return 0;

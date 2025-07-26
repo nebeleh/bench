@@ -293,7 +293,7 @@ int is_submodule_active(struct repository *repo, const char *path)
 int is_submodule_populated_gently(const char *path, int *return_error_code)
 {
 	int ret = 0;
-	char *gitdir = xstrfmt("%s/.git", path);
+	char *gitdir = xstrfmt("%s/.bench", path);
 
 	if (resolve_gitdir_gently(gitdir, return_error_code))
 		ret = 1;
@@ -1881,7 +1881,7 @@ unsigned is_submodule_modified(const char *path, int ignore_untracked)
 	if (validate_submodule_path(path) < 0)
 		exit(128);
 
-	strbuf_addf(&buf, "%s/.git", path);
+	strbuf_addf(&buf, "%s/.bench", path);
 	git_dir = read_gitfile(buf.buf);
 	if (!git_dir)
 		git_dir = buf.buf;
@@ -1960,7 +1960,7 @@ int submodule_uses_gitfile(const char *path)
 	if (validate_submodule_path(path) < 0)
 		exit(128);
 
-	strbuf_addf(&buf, "%s/.git", path);
+	strbuf_addf(&buf, "%s/.bench", path);
 	git_dir = read_gitfile(buf.buf);
 	if (!git_dir) {
 		strbuf_release(&buf);
@@ -1971,7 +1971,7 @@ int submodule_uses_gitfile(const char *path)
 	/* Now test that all nested submodules use a gitfile too */
 	strvec_pushl(&cp.args,
 		     "submodule", "foreach", "--quiet",	"--recursive",
-		     "test -f .git", NULL);
+		     "test -f .bench", NULL);
 
 	prepare_submodule_repo_env(&cp.env);
 	cp.git_cmd = 1;
@@ -2157,7 +2157,7 @@ int submodule_move_head(const char *path, const char *super_prefix,
 				absorb_git_dir_into_superproject(path,
 								 super_prefix);
 			else {
-				char *dotgit = xstrfmt("%s/.git", path);
+				char *dotgit = xstrfmt("%s/.bench", path);
 				char *git_dir = xstrdup(read_gitfile(dotgit));
 
 				free(dotgit);
@@ -2242,7 +2242,7 @@ int submodule_move_head(const char *path, const char *super_prefix,
 		} else {
 			struct strbuf sb = STRBUF_INIT;
 
-			strbuf_addf(&sb, "%s/.git", path);
+			strbuf_addf(&sb, "%s/.bench", path);
 			unlink_or_warn(sb.buf);
 			strbuf_release(&sb);
 
@@ -2343,7 +2343,7 @@ static void relocate_single_git_dir_into_superproject(const char *path,
 		die(_("relocate_gitdir for submodule '%s' with "
 		      "more than one worktree not supported"), path);
 
-	old_git_dir = xstrfmt("%s/.git", path);
+	old_git_dir = xstrfmt("%s/.bench", path);
 	if (read_gitfile(old_git_dir))
 		/* If it is an actual gitfile, it doesn't need migration. */
 		return;
@@ -2411,7 +2411,7 @@ void absorb_git_dir_into_superproject(const char *path,
 	if (validate_submodule_path(path) < 0)
 		exit(128);
 
-	strbuf_addf(&gitdir, "%s/.git", path);
+	strbuf_addf(&gitdir, "%s/.bench", path);
 	sub_git_dir = resolve_gitdir_gently(gitdir.buf, &err_code);
 
 	/* Not populated? */
@@ -2560,7 +2560,7 @@ int submodule_to_gitdir(struct repository *repo,
 	strbuf_reset(buf);
 	strbuf_addstr(buf, submodule);
 	strbuf_complete(buf, '/');
-	strbuf_addstr(buf, ".git");
+	strbuf_addstr(buf, ".bench");
 
 	git_dir = read_gitfile(buf->buf);
 	if (git_dir) {

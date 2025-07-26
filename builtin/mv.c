@@ -104,7 +104,7 @@ static const char *submodule_gitfile_path(const char *src, int first)
 	if (!is_staging_gitmodules_ok(the_repository->index))
 		die(_("Please stage your changes to .gitmodules or stash them to proceed"));
 
-	strbuf_addf(&submodule_dotgit, "%s/.git", src);
+	strbuf_addf(&submodule_dotgit, "%s/.bench", src);
 
 	path = read_gitfile(submodule_dotgit.buf);
 	strbuf_release(&submodule_dotgit);

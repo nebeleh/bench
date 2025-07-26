@@ -614,7 +614,7 @@ bindir = $(prefix)/bin
 mandir = $(prefix)/share/man
 infodir = $(prefix)/share/info
 bash_completion_dir = $(prefix)/share/bash-completion/completions
-gitexecdir = libexec/git-core
+gitexecdir = libexec/bench-core
 mergetoolsdir = $(gitexecdir)/mergetools
 sharedir = $(prefix)/share
 gitwebdir = $(sharedir)/gitweb
@@ -702,29 +702,29 @@ UNIT_TEST_BIN = $(UNIT_TEST_DIR)/bin
 # interactive shell sessions without exporting it.
 unexport CDPATH
 
-SCRIPT_SH += git-difftool--helper.sh
-SCRIPT_SH += git-filter-branch.sh
-SCRIPT_SH += git-merge-octopus.sh
-SCRIPT_SH += git-merge-one-file.sh
-SCRIPT_SH += git-merge-resolve.sh
-SCRIPT_SH += git-mergetool.sh
-SCRIPT_SH += git-quiltimport.sh
-SCRIPT_SH += git-request-pull.sh
-SCRIPT_SH += git-submodule.sh
-SCRIPT_SH += git-web--browse.sh
+SCRIPT_SH += bench-difftool--helper.sh
+SCRIPT_SH += bench-filter-branch.sh
+SCRIPT_SH += bench-merge-octopus.sh
+SCRIPT_SH += bench-merge-one-file.sh
+SCRIPT_SH += bench-merge-resolve.sh
+SCRIPT_SH += bench-mergetool.sh
+SCRIPT_SH += bench-quiltimport.sh
+SCRIPT_SH += bench-request-pull.sh
+SCRIPT_SH += bench-submodule.sh
+SCRIPT_SH += bench-web--browse.sh
 
-SCRIPT_LIB += git-mergetool--lib
-SCRIPT_LIB += git-sh-i18n
-SCRIPT_LIB += git-sh-setup
+SCRIPT_LIB += bench-mergetool--lib
+SCRIPT_LIB += bench-sh-i18n
+SCRIPT_LIB += bench-sh-setup
 
-SCRIPT_PERL += git-archimport.perl
-SCRIPT_PERL += git-cvsexportcommit.perl
-SCRIPT_PERL += git-cvsimport.perl
-SCRIPT_PERL += git-cvsserver.perl
-SCRIPT_PERL += git-send-email.perl
-SCRIPT_PERL += git-svn.perl
+SCRIPT_PERL += bench-archimport.perl
+SCRIPT_PERL += bench-cvsexportcommit.perl
+SCRIPT_PERL += bench-cvsimport.perl
+SCRIPT_PERL += bench-cvsserver.perl
+SCRIPT_PERL += bench-send-email.perl
+SCRIPT_PERL += bench-svn.perl
 
-SCRIPT_PYTHON += git-p4.py
+SCRIPT_PYTHON += bench-p4.py
 
 # Generated files for scripts
 SCRIPT_SH_GEN = $(patsubst %.sh,%,$(SCRIPT_SH))
@@ -758,7 +758,7 @@ clean-python-script:
 SCRIPTS = $(SCRIPT_SH_GEN) \
 	  $(SCRIPT_PERL_GEN) \
 	  $(SCRIPT_PYTHON_GEN) \
-	  git-instaweb
+	  bench-instaweb
 
 ETAGS_TARGET = TAGS
 
@@ -779,7 +779,7 @@ program-objs: $(PROGRAM_OBJS)
 # Binary suffix, set to .exe for Windows builds
 X =
 
-PROGRAMS += $(patsubst %.o,git-%$X,$(PROGRAM_OBJS))
+PROGRAMS += $(patsubst %.o,bench-%$X,$(PROGRAM_OBJS))
 
 TEST_BUILTINS_OBJS += test-advise.o
 TEST_BUILTINS_OBJS += test-bitmap.o
@@ -868,36 +868,36 @@ TEST_PROGRAMS = $(patsubst %,t/helper/%$X,$(TEST_PROGRAMS_NEED_X))
 
 # List built-in command $C whose implementation cmd_$C() is not in
 # builtin/$C.o but is linked in as part of some other command.
-BUILT_INS += $(patsubst builtin/%.o,git-%$X,$(BUILTIN_OBJS))
+BUILT_INS += $(patsubst builtin/%.o,bench-%$X,$(BUILTIN_OBJS))
 
-BUILT_INS += git-cherry$X
-BUILT_INS += git-cherry-pick$X
-BUILT_INS += git-format-patch$X
-BUILT_INS += git-fsck-objects$X
-BUILT_INS += git-init$X
-BUILT_INS += git-maintenance$X
-BUILT_INS += git-merge-subtree$X
-BUILT_INS += git-restore$X
-BUILT_INS += git-show$X
-BUILT_INS += git-stage$X
-BUILT_INS += git-status$X
-BUILT_INS += git-switch$X
-BUILT_INS += git-version$X
-BUILT_INS += git-whatchanged$X
+BUILT_INS += bench-cherry$X
+BUILT_INS += bench-cherry-pick$X
+BUILT_INS += bench-format-patch$X
+BUILT_INS += bench-fsck-objects$X
+BUILT_INS += bench-init$X
+BUILT_INS += bench-maintenance$X
+BUILT_INS += bench-merge-subtree$X
+BUILT_INS += bench-restore$X
+BUILT_INS += bench-show$X
+BUILT_INS += bench-stage$X
+BUILT_INS += bench-status$X
+BUILT_INS += bench-switch$X
+BUILT_INS += bench-version$X
+BUILT_INS += bench-whatchanged$X
 
 # what 'all' will build but not install in gitexecdir
-OTHER_PROGRAMS += git$X
+OTHER_PROGRAMS += bench$X
 OTHER_PROGRAMS += scalar$X
 
 # what test wrappers are needed and 'install' will install, in bindir
-BINDIR_PROGRAMS_NEED_X += git
+BINDIR_PROGRAMS_NEED_X += bench
 BINDIR_PROGRAMS_NEED_X += scalar
-BINDIR_PROGRAMS_NEED_X += git-receive-pack
-BINDIR_PROGRAMS_NEED_X += git-shell
-BINDIR_PROGRAMS_NEED_X += git-upload-archive
-BINDIR_PROGRAMS_NEED_X += git-upload-pack
+BINDIR_PROGRAMS_NEED_X += bench-receive-pack
+BINDIR_PROGRAMS_NEED_X += bench-shell
+BINDIR_PROGRAMS_NEED_X += bench-upload-archive
+BINDIR_PROGRAMS_NEED_X += bench-upload-pack
 
-BINDIR_PROGRAMS_NO_X += git-cvsserver
+BINDIR_PROGRAMS_NO_X += bench-cvsserver
 
 # Set paths to tools early so that they can be used for version tests.
 ifndef SHELL_PATH
@@ -1496,9 +1496,9 @@ ALL_COMMANDS_TO_INSTALL += $(BUILT_INS)
 else
 # git-upload-pack, git-receive-pack and git-upload-archive are special: they
 # are _expected_ to be present in the `bin/` directory in their dashed form.
-ALL_COMMANDS_TO_INSTALL += git-receive-pack$(X)
-ALL_COMMANDS_TO_INSTALL += git-upload-archive$(X)
-ALL_COMMANDS_TO_INSTALL += git-upload-pack$(X)
+ALL_COMMANDS_TO_INSTALL += bench-receive-pack$(X)
+ALL_COMMANDS_TO_INSTALL += bench-upload-archive$(X)
+ALL_COMMANDS_TO_INSTALL += bench-upload-pack$(X)
 endif
 
 ALL_CFLAGS = $(DEVELOPER_CFLAGS) $(CPPFLAGS) $(CFLAGS) $(CFLAGS_APPEND)
@@ -1653,7 +1653,7 @@ ifdef NO_CURL
 	REMOTE_CURL_PRIMARY =
 	REMOTE_CURL_ALIASES =
 	REMOTE_CURL_NAMES =
-	EXCLUDED_PROGRAMS += git-http-fetch git-http-push
+	EXCLUDED_PROGRAMS += bench-http-fetch bench-http-push
 else
         ifdef CURLDIR
 		# Try "-Wl,-rpath=$(CURLDIR)/$(lib)" in such a case.
@@ -1674,8 +1674,8 @@ else
         endif
 	BASIC_CFLAGS += $(CURL_CFLAGS)
 
-	REMOTE_CURL_PRIMARY = git-remote-http$X
-	REMOTE_CURL_ALIASES = git-remote-https$X git-remote-ftp$X git-remote-ftps$X
+	REMOTE_CURL_PRIMARY = bench-remote-http$X
+	REMOTE_CURL_ALIASES = bench-remote-https$X bench-remote-ftp$X bench-remote-ftps$X
 	REMOTE_CURL_NAMES = $(REMOTE_CURL_PRIMARY) $(REMOTE_CURL_ALIASES)
 	PROGRAM_OBJS += http-fetch.o
 	PROGRAMS += $(REMOTE_CURL_NAMES)
@@ -2537,7 +2537,13 @@ git.sp git.s git.o: EXTRA_CPPFLAGS = \
 	'-DGIT_MAN_PATH="$(mandir_relative_SQ)"' \
 	'-DGIT_INFO_PATH="$(infodir_relative_SQ)"'
 
-git$X: git.o GIT-LDFLAGS $(BUILTIN_OBJS) $(GITLIBS)
+bench.sp bench.s bench.o: GIT-PREFIX
+bench.sp bench.s bench.o: EXTRA_CPPFLAGS = \
+	'-DGIT_HTML_PATH="$(htmldir_relative_SQ)"' \
+	'-DGIT_MAN_PATH="$(mandir_relative_SQ)"' \
+	'-DGIT_INFO_PATH="$(infodir_relative_SQ)"'
+
+bench$X: bench.o GIT-LDFLAGS $(BUILTIN_OBJS) $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
 		$(filter %.o,$^) $(LIBS)
 
@@ -2561,7 +2567,7 @@ version-def.h: version-def.h.in GIT-VERSION-GEN GIT-VERSION-FILE GIT-USER-AGENT
 
 version.sp version.s version.o: version-def.h
 
-$(BUILT_INS): git$X
+$(BUILT_INS): bench$X
 	$(QUIET_BUILT_IN)$(RM) $@ && \
 	ln $< $@ 2>/dev/null || \
 	ln -s $< $@ 2>/dev/null || \
@@ -2663,12 +2669,12 @@ GIT-PERL-HEADER: $(PERL_HEADER_TEMPLATE) GIT-PERL-DEFINES Makefile
 perllibdir:
 	@echo '$(perllibdir_SQ)'
 
-git-instaweb: git-instaweb.sh generate-script.sh GIT-BUILD-OPTIONS GIT-SCRIPT-DEFINES
+bench-instaweb: bench-instaweb.sh generate-script.sh GIT-BUILD-OPTIONS GIT-SCRIPT-DEFINES
 	$(QUIET_GEN)./generate-script.sh "$<" "$@+" ./GIT-BUILD-OPTIONS && \
 	chmod +x $@+ && \
 	mv $@+ $@
 else # NO_PERL
-$(SCRIPT_PERL_GEN) git-instaweb: % : unimplemented.sh
+$(SCRIPT_PERL_GEN) bench-instaweb: % : unimplemented.sh
 	$(QUIET_GEN) \
 	sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
 	    -e 's|@REASON@|NO_PERL=$(NO_PERL)|g' \
@@ -2752,7 +2758,7 @@ test-objs: $(TEST_OBJS)
 GIT_OBJS += $(LIB_OBJS)
 GIT_OBJS += $(BUILTIN_OBJS)
 GIT_OBJS += common-main.o
-GIT_OBJS += git.o
+GIT_OBJS += bench.o
 .PHONY: git-objs
 git-objs: $(GIT_OBJS)
 
@@ -2887,17 +2893,17 @@ headless-git.o: compat/win32/headless.c GIT-CFLAGS
 headless-git$X: headless-git.o git.res GIT-LDFLAGS
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) $(ALL_LDFLAGS) -mwindows -o $@ $< git.res
 
-git-%$X: %.o GIT-LDFLAGS $(GITLIBS)
+bench-%$X: %.o GIT-LDFLAGS $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) $(LIBS)
 
-git-imap-send$X: imap-send.o $(IMAP_SEND_BUILDDEPS) GIT-LDFLAGS $(GITLIBS)
+bench-imap-send$X: imap-send.o $(IMAP_SEND_BUILDDEPS) GIT-LDFLAGS $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
 		$(IMAP_SEND_LDFLAGS) $(LIBS)
 
-git-http-fetch$X: http.o http-walker.o http-fetch.o GIT-LDFLAGS $(GITLIBS)
+bench-http-fetch$X: http.o http-walker.o http-fetch.o GIT-LDFLAGS $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
 		$(CURL_LIBCURL) $(LIBS)
-git-http-push$X: http.o http-push.o GIT-LDFLAGS $(GITLIBS)
+bench-http-push$X: http.o http-push.o GIT-LDFLAGS $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
 		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS)
 
@@ -3597,33 +3603,33 @@ endif
 	for p in $(filter $(install_bindir_programs),$(BUILT_INS)); do \
 		$(RM) "$$bindir/$$p" && \
 		test -n "$(INSTALL_SYMLINKS)" && \
-		ln -s "git$X" "$$bindir/$$p" || \
+		ln -s "bench$X" "$$bindir/$$p" || \
 		{ test -z "$(NO_INSTALL_HARDLINKS)" && \
-		  ln "$$bindir/git$X" "$$bindir/$$p" 2>/dev/null || \
-		  ln -s "git$X" "$$bindir/$$p" 2>/dev/null || \
-		  cp "$$bindir/git$X" "$$bindir/$$p" || exit; }; \
+		  ln "$$bindir/bench$X" "$$bindir/$$p" 2>/dev/null || \
+		  ln -s "bench$X" "$$bindir/$$p" 2>/dev/null || \
+		  cp "$$bindir/bench$X" "$$bindir/$$p" || exit; }; \
 	done && \
 	for p in $(BUILT_INS); do \
 		$(RM) "$$execdir/$$p" && \
 		if test -z "$(SKIP_DASHED_BUILT_INS)"; \
 		then \
 			test -n "$(INSTALL_SYMLINKS)" && \
-			ln -s "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/git$X" "$$execdir/$$p" || \
+			ln -s "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/bench$X" "$$execdir/$$p" || \
 			{ test -z "$(NO_INSTALL_HARDLINKS)" && \
-			  ln "$$execdir/git$X" "$$execdir/$$p" 2>/dev/null || \
+			  ln "$$execdir/bench$X" "$$execdir/$$p" 2>/dev/null || \
 			  ln -s "git$X" "$$execdir/$$p" 2>/dev/null || \
-			  cp "$$execdir/git$X" "$$execdir/$$p" || exit; }; \
+			  cp "$$execdir/bench$X" "$$execdir/$$p" || exit; }; \
 		fi \
 	done && \
 	remote_curl_aliases="$(REMOTE_CURL_ALIASES)" && \
 	for p in $$remote_curl_aliases; do \
 		$(RM) "$$execdir/$$p" && \
 		test -n "$(INSTALL_SYMLINKS)" && \
-		ln -s "git-remote-http$X" "$$execdir/$$p" || \
+		ln -s "bench-remote-http$X" "$$execdir/$$p" || \
 		{ test -z "$(NO_INSTALL_HARDLINKS)" && \
-		  ln "$$execdir/git-remote-http$X" "$$execdir/$$p" 2>/dev/null || \
-		  ln -s "git-remote-http$X" "$$execdir/$$p" 2>/dev/null || \
-		  cp "$$execdir/git-remote-http$X" "$$execdir/$$p" || exit; } \
+		  ln "$$execdir/bench-remote-http$X" "$$execdir/$$p" 2>/dev/null || \
+		  ln -s "bench-remote-http$X" "$$execdir/$$p" 2>/dev/null || \
+		  cp "$$execdir/bench-remote-http$X" "$$execdir/$$p" || exit; } \
 	done
 
 .PHONY: install-doc install-man install-man-perl install-html install-info install-pdf

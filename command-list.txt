@@ -35,7 +35,7 @@
 # specify any of these attributes.
 #
 # "complete" attribute is used to mark that the command should be
-# completable by git-completion.bash. Note that by default,
+# completable by bench-completion.bash. Note that by default,
 # mainporcelain commands are completable so you don't need this
 # attribute.
 #
@@ -54,159 +54,159 @@
 #
 ### command list (do not change this line)
 # command name                          category [category] [category]
-git-add                                 mainporcelain           worktree
-git-am                                  mainporcelain
-git-annotate                            ancillaryinterrogators
-git-apply                               plumbingmanipulators            complete
-git-archimport                          foreignscminterface
-git-archive                             mainporcelain
-git-backfill                            mainporcelain           history
-git-bisect                              mainporcelain           info
-git-blame                               ancillaryinterrogators          complete
-git-branch                              mainporcelain           history
-git-bugreport                           ancillaryinterrogators
-git-bundle                              mainporcelain
-git-cat-file                            plumbinginterrogators
-git-check-attr                          purehelpers
-git-check-ignore                        purehelpers
-git-check-mailmap                       purehelpers
-git-check-ref-format                    purehelpers
-git-checkout                            mainporcelain
-git-checkout-index                      plumbingmanipulators
-git-cherry                              plumbinginterrogators          complete
-git-cherry-pick                         mainporcelain
-git-citool                              mainporcelain
-git-clean                               mainporcelain
-git-clone                               mainporcelain           init
-git-column                              purehelpers
-git-commit                              mainporcelain           history
-git-commit-graph                        plumbingmanipulators
-git-commit-tree                         plumbingmanipulators
-git-config                              ancillarymanipulators           complete
-git-count-objects                       ancillaryinterrogators
-git-credential                          purehelpers
-git-credential-cache                    purehelpers
-git-credential-store                    purehelpers
-git-cvsexportcommit                     foreignscminterface
-git-cvsimport                           foreignscminterface
-git-cvsserver                           foreignscminterface
-git-daemon                              synchingrepositories
-git-describe                            mainporcelain
-git-diagnose                            ancillaryinterrogators
-git-diff                                mainporcelain           info
-git-diff-files                          plumbinginterrogators
-git-diff-index                          plumbinginterrogators
-git-diff-pairs                          plumbinginterrogators
-git-diff-tree                           plumbinginterrogators
-git-difftool                            ancillaryinterrogators          complete
-git-fast-export                         ancillarymanipulators
-git-fast-import                         ancillarymanipulators
-git-fetch                               mainporcelain           remote
-git-fetch-pack                          synchingrepositories
-git-filter-branch                       ancillarymanipulators
-git-fmt-merge-msg                       purehelpers
-git-for-each-ref                        plumbinginterrogators
-git-for-each-repo                       plumbinginterrogators
-git-format-patch                        mainporcelain
-git-fsck                                ancillaryinterrogators          complete
-git-gc                                  mainporcelain
-git-get-tar-commit-id                   plumbinginterrogators
-git-grep                                mainporcelain           info
-git-gui                                 mainporcelain
-git-hash-object                         plumbingmanipulators
-git-help                                ancillaryinterrogators          complete
-git-hook                                purehelpers
-git-http-backend                        synchingrepositories
-git-http-fetch                          synchelpers
-git-http-push                           synchelpers
-git-imap-send                           foreignscminterface
-git-index-pack                          plumbingmanipulators
-git-init                                mainporcelain           init
-git-instaweb                            ancillaryinterrogators          complete
-git-interpret-trailers                  purehelpers
-git-log                                 mainporcelain           info
-git-ls-files                            plumbinginterrogators
-git-ls-remote                           plumbinginterrogators
-git-ls-tree                             plumbinginterrogators
-git-mailinfo                            purehelpers
-git-mailsplit                           purehelpers
-git-maintenance                         mainporcelain
-git-merge                               mainporcelain           history
-git-merge-base                          plumbinginterrogators
-git-merge-file                          plumbingmanipulators
-git-merge-index                         plumbingmanipulators
-git-merge-one-file                      purehelpers
-git-merge-tree                          ancillaryinterrogators
-git-mergetool                           ancillarymanipulators           complete
-git-mktag                               plumbingmanipulators
-git-mktree                              plumbingmanipulators
-git-multi-pack-index                    plumbingmanipulators
-git-mv                                  mainporcelain           worktree
-git-name-rev                            plumbinginterrogators
-git-notes                               mainporcelain
-git-p4                                  foreignscminterface
-git-pack-objects                        plumbingmanipulators
-git-pack-redundant                      plumbinginterrogators
-git-pack-refs                           ancillarymanipulators
-git-patch-id                            purehelpers
-git-prune                               ancillarymanipulators   complete
-git-prune-packed                        plumbingmanipulators
-git-pull                                mainporcelain           remote
-git-push                                mainporcelain           remote
-git-quiltimport                         foreignscminterface
-git-range-diff                          mainporcelain
-git-read-tree                           plumbingmanipulators
-git-rebase                              mainporcelain           history
-git-receive-pack                        synchelpers
-git-reflog                              ancillarymanipulators           complete
-git-refs                                ancillarymanipulators           complete
-git-remote                              ancillarymanipulators           complete
-git-repack                              ancillarymanipulators           complete
-git-replace                             ancillarymanipulators           complete
-git-replay                              plumbingmanipulators
-git-request-pull                        foreignscminterface             complete
-git-rerere                              ancillaryinterrogators
-git-reset                               mainporcelain           history
-git-restore                             mainporcelain           worktree
-git-rev-list                            plumbinginterrogators
-git-rev-parse                           plumbinginterrogators
-git-revert                              mainporcelain
-git-rm                                  mainporcelain           worktree
-git-send-email                          foreignscminterface             complete
-git-send-pack                           synchingrepositories
-git-sh-i18n                             purehelpers
-git-sh-setup                            purehelpers
-git-shell                               synchelpers
-git-shortlog                            mainporcelain
-git-show                                mainporcelain           info
-git-show-branch                         ancillaryinterrogators          complete
-git-show-index                          plumbinginterrogators
-git-show-ref                            plumbinginterrogators
-git-sparse-checkout                     mainporcelain
-git-stage                                                               complete
-git-stash                               mainporcelain
-git-status                              mainporcelain           info
-git-stripspace                          purehelpers
-git-submodule                           mainporcelain
-git-svn                                 foreignscminterface
-git-switch                              mainporcelain           history
-git-symbolic-ref                        plumbingmanipulators
-git-tag                                 mainporcelain           history
-git-unpack-file                         plumbinginterrogators
-git-unpack-objects                      plumbingmanipulators
-git-update-index                        plumbingmanipulators
-git-update-ref                          plumbingmanipulators
-git-update-server-info                  synchingrepositories
-git-upload-archive                      synchelpers
-git-upload-pack                         synchelpers
-git-var                                 plumbinginterrogators
-git-verify-commit                       ancillaryinterrogators
-git-verify-pack                         plumbinginterrogators
-git-verify-tag                          ancillaryinterrogators
-git-version                             ancillaryinterrogators
-git-whatchanged                         ancillaryinterrogators          complete
-git-worktree                            mainporcelain
-git-write-tree                          plumbingmanipulators
+bench-add                                 mainporcelain           worktree
+bench-am                                  mainporcelain
+bench-annotate                            ancillaryinterrogators
+bench-apply                               plumbingmanipulators            complete
+bench-archimport                          foreignscminterface
+bench-archive                             mainporcelain
+bench-backfill                            mainporcelain           history
+bench-bisect                              mainporcelain           info
+bench-blame                               ancillaryinterrogators          complete
+bench-branch                              mainporcelain           history
+bench-bugreport                           ancillaryinterrogators
+bench-bundle                              mainporcelain
+bench-cat-file                            plumbinginterrogators
+bench-check-attr                          purehelpers
+bench-check-ignore                        purehelpers
+bench-check-mailmap                       purehelpers
+bench-check-ref-format                    purehelpers
+bench-checkout                            mainporcelain
+bench-checkout-index                      plumbingmanipulators
+bench-cherry                              plumbinginterrogators          complete
+bench-cherry-pick                         mainporcelain
+bench-citool                              mainporcelain
+bench-clean                               mainporcelain
+bench-clone                               mainporcelain           init
+bench-column                              purehelpers
+bench-commit                              mainporcelain           history
+bench-commit-graph                        plumbingmanipulators
+bench-commit-tree                         plumbingmanipulators
+bench-config                              ancillarymanipulators           complete
+bench-count-objects                       ancillaryinterrogators
+bench-credential                          purehelpers
+bench-credential-cache                    purehelpers
+bench-credential-store                    purehelpers
+bench-cvsexportcommit                     foreignscminterface
+bench-cvsimport                           foreignscminterface
+bench-cvsserver                           foreignscminterface
+bench-daemon                              synchingrepositories
+bench-describe                            mainporcelain
+bench-diagnose                            ancillaryinterrogators
+bench-diff                                mainporcelain           info
+bench-diff-files                          plumbinginterrogators
+bench-diff-index                          plumbinginterrogators
+bench-diff-pairs                          plumbinginterrogators
+bench-diff-tree                           plumbinginterrogators
+bench-difftool                            ancillaryinterrogators          complete
+bench-fast-export                         ancillarymanipulators
+bench-fast-import                         ancillarymanipulators
+bench-fetch                               mainporcelain           remote
+bench-fetch-pack                          synchingrepositories
+bench-filter-branch                       ancillarymanipulators
+bench-fmt-merge-msg                       purehelpers
+bench-for-each-ref                        plumbinginterrogators
+bench-for-each-repo                       plumbinginterrogators
+bench-format-patch                        mainporcelain
+bench-fsck                                ancillaryinterrogators          complete
+bench-gc                                  mainporcelain
+bench-get-tar-commit-id                   plumbinginterrogators
+bench-grep                                mainporcelain           info
+bench-gui                                 mainporcelain
+bench-hash-object                         plumbingmanipulators
+bench-help                                ancillaryinterrogators          complete
+bench-hook                                purehelpers
+bench-http-backend                        synchingrepositories
+bench-http-fetch                          synchelpers
+bench-http-push                           synchelpers
+bench-imap-send                           foreignscminterface
+bench-index-pack                          plumbingmanipulators
+bench-init                                mainporcelain           init
+bench-instaweb                            ancillaryinterrogators          complete
+bench-interpret-trailers                  purehelpers
+bench-log                                 mainporcelain           info
+bench-ls-files                            plumbinginterrogators
+bench-ls-remote                           plumbinginterrogators
+bench-ls-tree                             plumbinginterrogators
+bench-mailinfo                            purehelpers
+bench-mailsplit                           purehelpers
+bench-maintenance                         mainporcelain
+bench-merge                               mainporcelain           history
+bench-merge-base                          plumbinginterrogators
+bench-merge-file                          plumbingmanipulators
+bench-merge-index                         plumbingmanipulators
+bench-merge-one-file                      purehelpers
+bench-merge-tree                          ancillaryinterrogators
+bench-mergetool                           ancillarymanipulators           complete
+bench-mktag                               plumbingmanipulators
+bench-mktree                              plumbingmanipulators
+bench-multi-pack-index                    plumbingmanipulators
+bench-mv                                  mainporcelain           worktree
+bench-name-rev                            plumbinginterrogators
+bench-notes                               mainporcelain
+bench-p4                                  foreignscminterface
+bench-pack-objects                        plumbingmanipulators
+bench-pack-redundant                      plumbinginterrogators
+bench-pack-refs                           ancillarymanipulators
+bench-patch-id                            purehelpers
+bench-prune                               ancillarymanipulators   complete
+bench-prune-packed                        plumbingmanipulators
+bench-pull                                mainporcelain           remote
+bench-push                                mainporcelain           remote
+bench-quiltimport                         foreignscminterface
+bench-range-diff                          mainporcelain
+bench-read-tree                           plumbingmanipulators
+bench-rebase                              mainporcelain           history
+bench-receive-pack                        synchelpers
+bench-reflog                              ancillarymanipulators           complete
+bench-refs                                ancillarymanipulators           complete
+bench-remote                              ancillarymanipulators           complete
+bench-repack                              ancillarymanipulators           complete
+bench-replace                             ancillarymanipulators           complete
+bench-replay                              plumbingmanipulators
+bench-request-pull                        foreignscminterface             complete
+bench-rerere                              ancillaryinterrogators
+bench-reset                               mainporcelain           history
+bench-restore                             mainporcelain           worktree
+bench-rev-list                            plumbinginterrogators
+bench-rev-parse                           plumbinginterrogators
+bench-revert                              mainporcelain
+bench-rm                                  mainporcelain           worktree
+bench-send-email                          foreignscminterface             complete
+bench-send-pack                           synchingrepositories
+bench-sh-i18n                             purehelpers
+bench-sh-setup                            purehelpers
+bench-shell                               synchelpers
+bench-shortlog                            mainporcelain
+bench-show                                mainporcelain           info
+bench-show-branch                         ancillaryinterrogators          complete
+bench-show-index                          plumbinginterrogators
+bench-show-ref                            plumbinginterrogators
+bench-sparse-checkout                     mainporcelain
+bench-stage                                                               complete
+bench-stash                               mainporcelain
+bench-status                              mainporcelain           info
+bench-stripspace                          purehelpers
+bench-submodule                           mainporcelain
+bench-svn                                 foreignscminterface
+bench-switch                              mainporcelain           history
+bench-symbolic-ref                        plumbingmanipulators
+bench-tag                                 mainporcelain           history
+bench-unpack-file                         plumbinginterrogators
+bench-unpack-objects                      plumbingmanipulators
+bench-update-index                        plumbingmanipulators
+bench-update-ref                          plumbingmanipulators
+bench-update-server-info                  synchingrepositories
+bench-upload-archive                      synchelpers
+bench-upload-pack                         synchelpers
+bench-var                                 plumbinginterrogators
+bench-verify-commit                       ancillaryinterrogators
+bench-verify-pack                         plumbinginterrogators
+bench-verify-tag                          ancillaryinterrogators
+bench-version                             ancillaryinterrogators
+bench-whatchanged                         ancillaryinterrogators          complete
+bench-worktree                            mainporcelain
+bench-write-tree                          plumbingmanipulators
 gitattributes                           userinterfaces
 gitcli                                  userinterfaces
 gitcore-tutorial                        guide

@@ -632,7 +632,7 @@ static void status_submodule(const char *path, const struct object_id *ce_oid,
 		goto cleanup;
 	}
 
-	strbuf_addf(&buf, "%s/.git", path);
+	strbuf_addf(&buf, "%s/.bench", path);
 	git_dir = read_gitfile(buf.buf);
 	if (!git_dir)
 		git_dir = buf.buf;
@@ -1375,7 +1375,7 @@ static void deinit_submodule(const char *path, const char *prefix,
 	char *displaypath = NULL;
 	struct child_process cp_config = CHILD_PROCESS_INIT;
 	struct strbuf sb_config = STRBUF_INIT;
-	char *sub_git_dir = xstrfmt("%s/.git", path);
+	char *sub_git_dir = xstrfmt("%s/.bench", path);
 
 	if (validate_submodule_path(path) < 0)
 		die(NULL);
@@ -1766,7 +1766,7 @@ static int clone_submodule(const struct module_clone_data *clone_data,
 
 		if (clone_data->require_init && !stat(clone_data_path, &st) &&
 		    !dir_contains_only_dotgit(clone_data_path)) {
-			char *dot_git = xstrfmt("%s/.git", clone_data_path);
+			char *dot_git = xstrfmt("%s/.bench", clone_data_path);
 			unlink(dot_git);
 			free(dot_git);
 			die(_("directory not empty: '%s'"), clone_data_path);
@@ -2110,7 +2110,7 @@ static int prepare_to_clone_next_submodule(const struct cache_entry *ce,
 		die(_("cannot clone submodule '%s' without a URL"), sub->name);
 
 	strbuf_reset(&sb);
-	strbuf_addf(&sb, "%s/.git", ce->name);
+	strbuf_addf(&sb, "%s/.bench", ce->name);
 	needs_cloning = !file_exists(sb.buf);
 
 	ALLOC_GROW(suc->update_clone, suc->update_clone_nr + 1,
@@ -3200,7 +3200,7 @@ static int add_submodule(const struct add_data *add_data)
 	if (is_directory(add_data->sm_path)) {
 		struct strbuf sm_path = STRBUF_INIT;
 		strbuf_addstr(&sm_path, add_data->sm_path);
-		submod_gitdir_path = xstrfmt("%s/.git", add_data->sm_path);
+		submod_gitdir_path = xstrfmt("%s/.bench", add_data->sm_path);
 		if (is_nonbare_repository_dir(&sm_path))
 			printf(_("Adding existing repo at '%s' to the index\n"),
 			       add_data->sm_path);
@@ -3212,7 +3212,7 @@ static int add_submodule(const struct add_data *add_data)
 	} else {
 		struct child_process cp = CHILD_PROCESS_INIT;
 
-		submod_gitdir_path = xstrfmt(".git/modules/%s", add_data->sm_name);
+		submod_gitdir_path = xstrfmt(".bench/modules/%s", add_data->sm_name);
 
 		if (is_directory(submod_gitdir_path)) {
 			if (!add_data->force) {

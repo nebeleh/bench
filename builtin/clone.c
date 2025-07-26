@@ -97,7 +97,7 @@ static int recurse_submodules_cb(const struct option *opt,
 
 static const char *get_repo_path_1(struct strbuf *path, int *is_bundle)
 {
-	static const char *suffix[] = { "/.git", "", ".git/.git", ".git" };
+	static const char *suffix[] = { "/.bench", "", ".bench/.bench", ".bench" };
 	static const char *bundle_suffix[] = { ".bundle", "" };
 	size_t baselen = path->len;
 	struct stat st;
@@ -1092,7 +1092,7 @@ int cmd_clone(int argc,
 		git_dir = xstrdup(dir);
 	else {
 		work_tree = dir;
-		git_dir = mkpathdup("%s/.git", dir);
+		git_dir = mkpathdup("%s/.bench", dir);
 	}
 
 	atexit(remove_junk);

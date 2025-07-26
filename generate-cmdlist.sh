@@ -67,16 +67,27 @@ print_command_list () {
 	echo "$2" |
 	while read cmd rest
 	do
+		# Handle special case where command doesn't start with bench-
+		docfile="$1/Documentation/$cmd.adoc"
+		if ! test -f "$docfile"; then
+			docfile="$1/Documentation/git${cmd#bench}.adoc"
+		fi
+		
 		synopsis=
 		while read line
 		do
+			# Handle both cases: bench-* commands and non-prefixed commands
 			case "$line" in
 			"$cmd - "*)
 				synopsis=${line#$cmd - }
 				break
 				;;
+			"git${cmd#bench} - "*)
+				synopsis=${line#git${cmd#bench} - }
+				break
+				;;
 			esac
-		done <"$1/Documentation/$cmd.adoc"
+		done <"$docfile"
 
 		printf '\t{ "%s", N_("%s"), 0' "$cmd" "$synopsis"
 		printf " | CAT_%s" $rest

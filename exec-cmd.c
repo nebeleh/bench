@@ -53,7 +53,7 @@ static const char *system_prefix(void)
 	if (!prefix &&
 	    !(prefix = strip_path_suffix(executable_dirname, GIT_EXEC_PATH)) &&
 	    !(prefix = strip_path_suffix(executable_dirname, BINDIR)) &&
-	    !(prefix = strip_path_suffix(executable_dirname, "git"))) {
+	    !(prefix = strip_path_suffix(executable_dirname, "bench"))) {
 		prefix = FALLBACK_RUNTIME_PREFIX;
 		trace_printf("RUNTIME_PREFIX requested, "
 				"but prefix computation failed.  "
@@ -351,7 +351,7 @@ void setup_path(void)
 
 const char **prepare_git_cmd(struct strvec *out, const char **argv)
 {
-	strvec_push(out, "git");
+	strvec_push(out, "bench");
 	strvec_pushv(out, argv);
 	return out->v;
 }
@@ -364,7 +364,7 @@ int execv_git_cmd(const char **argv)
 	trace_argv_printf(nargv.v, "trace: exec:");
 
 	/* execvp() can only ever return if it fails */
-	sane_execvp("git", (char **)nargv.v);
+	sane_execvp("bench", (char **)nargv.v);
 
 	trace_printf("trace: exec failed: %s\n", strerror(errno));
 

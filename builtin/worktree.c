@@ -497,7 +497,7 @@ static int add_worktree(const char *path, const char *refname,
 	else
 		write_file(sb.buf, _("initializing"));
 
-	strbuf_addf(&sb_git, "%s/.git", path);
+	strbuf_addf(&sb_git, "%s/.bench", path);
 	if (safe_create_leading_directories_const(the_repository, sb_git.buf))
 		die_errno(_("could not create leading directories of '%s'"),
 			  sb_git.buf);
@@ -1305,7 +1305,7 @@ static void check_clean_worktree(struct worktree *wt,
 	validate_no_submodules(wt);
 
 	child_process_init(&cp);
-	strvec_pushf(&cp.env, "%s=%s/.git",
+	strvec_pushf(&cp.env, "%s=%s/.bench",
 		     GIT_DIR_ENVIRONMENT, wt->path);
 	strvec_pushf(&cp.env, "%s=%s",
 		     GIT_WORK_TREE_ENVIRONMENT, wt->path);

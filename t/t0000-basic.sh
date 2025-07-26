@@ -5,7 +5,7 @@
 
 test_description='Test the very basics part #1.
 
-The rest of the test suite does not check the basic operation of git
+The rest of the test suite does not check the basic operation of bench
 plumbing commands to work very carefully.  Their job is to concentrate
 on tricky features that caused bugs in the past to detect regression.
 
@@ -46,18 +46,18 @@ test_expect_success 'verify that the running shell supports "local"' '
 '
 
 ################################################################
-# git init has been done in an empty repository.
+# bench init has been done in an empty repository.
 # make sure it is empty.
 
-test_expect_success '.git/objects should be empty after git init in an empty repo' '
-	find .git/objects -type f -print >should-be-empty &&
+test_expect_success '.bench/objects should be empty after bench init in an empty repo' '
+	find .bench/objects -type f -print >should-be-empty &&
 	test_line_count = 0 should-be-empty
 '
 
 # also it should have 2 subdirectories; no fan-out anymore, pack, and info.
 # 3 is counting "objects" itself
-test_expect_success '.git/objects should have 3 subdirectories' '
-	find .git/objects -type d -print >full-of-directories &&
+test_expect_success '.bench/objects should have 3 subdirectories' '
+	find .bench/objects -type d -print >full-of-directories &&
 	test_line_count = 3 full-of-directories
 '
 
@@ -937,17 +937,17 @@ simpletree sha256:1710c07a6c86f9a3c7376364df04c47ee39e5a5e221fcdd84b743bc9bb7e2b
 EOF
 
 # updating a new file without --add should fail.
-test_expect_success 'git update-index without --add should fail adding' '
-	test_must_fail git update-index should-be-empty
+test_expect_success 'bench update-index without --add should fail adding' '
+	test_must_fail bench update-index should-be-empty
 '
 
 # and with --add it should succeed, even if it is empty (it used to fail).
-test_expect_success 'git update-index with --add should succeed' '
-	git update-index --add should-be-empty
+test_expect_success 'bench update-index with --add should succeed' '
+	bench update-index --add should-be-empty
 '
 
-test_expect_success 'writing tree out with git write-tree' '
-	tree=$(git write-tree)
+test_expect_success 'writing tree out with bench write-tree' '
+	tree=$(bench write-tree)
 '
 
 # we know the shape and contents of the tree and know the object ID for it.
@@ -956,18 +956,18 @@ test_expect_success 'validate object ID of a known tree' '
     '
 
 # Removing paths.
-test_expect_success 'git update-index without --remove should fail removing' '
+test_expect_success 'bench update-index without --remove should fail removing' '
 	rm -f should-be-empty full-of-directories &&
-	test_must_fail git update-index should-be-empty
+	test_must_fail bench update-index should-be-empty
 '
 
-test_expect_success 'git update-index with --remove should be able to remove' '
-	git update-index --remove should-be-empty
+test_expect_success 'bench update-index with --remove should be able to remove' '
+	bench update-index --remove should-be-empty
 '
 
 # Empty tree can be written with recent write-tree.
-test_expect_success 'git write-tree should be able to write an empty tree' '
-	tree=$(git write-tree)
+test_expect_success 'bench write-tree should be able to write an empty tree' '
+	tree=$(bench write-tree)
 '
 
 test_expect_success 'validate object ID of a known tree' '
@@ -976,7 +976,7 @@ test_expect_success 'validate object ID of a known tree' '
 
 # Various types of objects
 
-test_expect_success 'adding various types of objects with git update-index --add' '
+test_expect_success 'adding various types of objects with bench update-index --add' '
 	mkdir path2 path3 path3/subp3 &&
 	paths="path0 path2/file2 path3/file3 path3/subp3/file3" &&
 	(
@@ -986,15 +986,15 @@ test_expect_success 'adding various types of objects with git update-index --add
 			test_ln_s_add "hello $p" ${p}sym || exit 1
 		done
 	) &&
-	find path* ! -type d -print | xargs git update-index --add
+	find path* ! -type d -print | xargs bench update-index --add
 '
 
 # Show them and see that matches what we expect.
-test_expect_success 'showing stage with git ls-files --stage' '
-	git ls-files --stage >current
+test_expect_success 'showing stage with bench ls-files --stage' '
+	bench ls-files --stage >current
 '
 
-test_expect_success 'validate git ls-files output for a known tree' '
+test_expect_success 'validate bench ls-files output for a known tree' '
 	cat >expected <<-EOF &&
 	100644 $(test_oid path0f) 0	path0
 	120000 $(test_oid path0s) 0	path0sym
@@ -1008,19 +1008,19 @@ test_expect_success 'validate git ls-files output for a known tree' '
 	test_cmp expected current
 '
 
-test_expect_success 'writing tree out with git write-tree' '
-	tree=$(git write-tree)
+test_expect_success 'writing tree out with bench write-tree' '
+	tree=$(bench write-tree)
 '
 
 test_expect_success 'validate object ID for a known tree' '
 	test "$tree" = "$(test_oid root)"
 '
 
-test_expect_success 'showing tree with git ls-tree' '
-	git ls-tree $tree >current
+test_expect_success 'showing tree with bench ls-tree' '
+	bench ls-tree $tree >current
 '
 
-test_expect_success 'git ls-tree output for a known tree' '
+test_expect_success 'bench ls-tree output for a known tree' '
 	cat >expected <<-EOF &&
 	100644 blob $(test_oid path0f)	path0
 	120000 blob $(test_oid path0s)	path0sym
@@ -1032,11 +1032,11 @@ test_expect_success 'git ls-tree output for a known tree' '
 
 # This changed in ls-tree pathspec change -- recursive does
 # not show tree nodes anymore.
-test_expect_success 'showing tree with git ls-tree -r' '
-	git ls-tree -r $tree >current
+test_expect_success 'showing tree with bench ls-tree -r' '
+	bench ls-tree -r $tree >current
 '
 
-test_expect_success 'git ls-tree -r output for a known tree' '
+test_expect_success 'bench ls-tree -r output for a known tree' '
 	cat >expected <<-EOF &&
 	100644 blob $(test_oid path0f)	path0
 	120000 blob $(test_oid path0s)	path0sym
@@ -1051,11 +1051,11 @@ test_expect_success 'git ls-tree -r output for a known tree' '
 '
 
 # But with -r -t we can have both.
-test_expect_success 'showing tree with git ls-tree -r -t' '
-	git ls-tree -r -t $tree >current
+test_expect_success 'showing tree with bench ls-tree -r -t' '
+	bench ls-tree -r -t $tree >current
 '
 
-test_expect_success 'git ls-tree -r output for a known tree' '
+test_expect_success 'bench ls-tree -r output for a known tree' '
 	cat >expected <<-EOF &&
 	100644 blob $(test_oid path0f)	path0
 	120000 blob $(test_oid path0s)	path0sym
@@ -1072,16 +1072,16 @@ test_expect_success 'git ls-tree -r output for a known tree' '
 	test_cmp expected current
 '
 
-test_expect_success 'writing partial tree out with git write-tree --prefix' '
-	ptree=$(git write-tree --prefix=path3)
+test_expect_success 'writing partial tree out with bench write-tree --prefix' '
+	ptree=$(bench write-tree --prefix=path3)
 '
 
 test_expect_success 'validate object ID for a known tree' '
 	test "$ptree" = $(test_oid path3d)
 '
 
-test_expect_success 'writing partial tree out with git write-tree --prefix' '
-	ptree=$(git write-tree --prefix=path3/subp3)
+test_expect_success 'writing partial tree out with bench write-tree --prefix' '
+	ptree=$(bench write-tree --prefix=path3/subp3)
 '
 
 test_expect_success 'validate object ID for a known tree' '
@@ -1089,7 +1089,7 @@ test_expect_success 'validate object ID for a known tree' '
 '
 
 test_expect_success 'put invalid objects into the index' '
-	rm -f .git/index &&
+	rm -f .bench/index &&
 	suffix=$(echo $ZERO_OID | sed -e "s/^.//") &&
 	cat >badobjects <<-EOF &&
 	100644 blob $(test_oid 001)	dir/file1
@@ -1098,28 +1098,28 @@ test_expect_success 'put invalid objects into the index' '
 	100644 blob $(test_oid 004)	dir/file4
 	100644 blob $(test_oid 005)	dir/file5
 	EOF
-	git update-index --index-info <badobjects
+	bench update-index --index-info <badobjects
 '
 
 test_expect_success 'writing this tree without --missing-ok' '
-	test_must_fail git write-tree
+	test_must_fail bench write-tree
 '
 
 test_expect_success 'writing this tree with --missing-ok' '
-	git write-tree --missing-ok
+	bench write-tree --missing-ok
 '
 
 
 ################################################################
-test_expect_success 'git read-tree followed by write-tree should be idempotent' '
-	rm -f .git/index &&
-	git read-tree $tree &&
-	test_path_is_file .git/index &&
-	newtree=$(git write-tree) &&
+test_expect_success 'bench read-tree followed by write-tree should be idempotent' '
+	rm -f .bench/index &&
+	bench read-tree $tree &&
+	test_path_is_file .bench/index &&
+	newtree=$(bench write-tree) &&
 	test "$newtree" = "$tree"
 '
 
-test_expect_success 'validate git diff-files output for a know cache/work tree state' '
+test_expect_success 'validate bench diff-files output for a know cache/work tree state' '
 	cat >expected <<EOF &&
 :100644 100644 $(test_oid path0f) $ZERO_OID M	path0
 :120000 120000 $(test_oid path0s) $ZERO_OID M	path0sym
@@ -1130,46 +1130,46 @@ test_expect_success 'validate git diff-files output for a know cache/work tree s
 :100644 100644 $(test_oid subp3f) $ZERO_OID M	path3/subp3/file3
 :120000 120000 $(test_oid subp3s) $ZERO_OID M	path3/subp3/file3sym
 EOF
-	git diff-files >current &&
+	bench diff-files >current &&
 	test_cmp expected current
 '
 
-test_expect_success 'git update-index --refresh should succeed' '
-	git update-index --refresh
+test_expect_success 'bench update-index --refresh should succeed' '
+	bench update-index --refresh
 '
 
-test_expect_success 'no diff after checkout and git update-index --refresh' '
-	git diff-files >current &&
+test_expect_success 'no diff after checkout and bench update-index --refresh' '
+	bench diff-files >current &&
 	cmp -s current /dev/null
 '
 
 ################################################################
 P=$(test_oid root)
 
-test_expect_success 'git commit-tree records the correct tree in a commit' '
-	commit0=$(echo NO | git commit-tree $P) &&
-	git show --pretty=raw $commit0 >out &&
+test_expect_success 'bench commit-tree records the correct tree in a commit' '
+	commit0=$(echo NO | bench commit-tree $P) &&
+	bench show --pretty=raw $commit0 >out &&
 	tree=$(sed -n -e "s/^tree //p" -e "/^author /q" out) &&
 	test "z$tree" = "z$P"
 '
 
-test_expect_success 'git commit-tree records the correct parent in a commit' '
-	commit1=$(echo NO | git commit-tree $P -p $commit0) &&
-	git show --pretty=raw $commit1 >out &&
+test_expect_success 'bench commit-tree records the correct parent in a commit' '
+	commit1=$(echo NO | bench commit-tree $P -p $commit0) &&
+	bench show --pretty=raw $commit1 >out &&
 	parent=$(sed -n -e "s/^parent //p" -e "/^author /q" out) &&
 	test "z$commit0" = "z$parent"
 '
 
-test_expect_success 'git commit-tree omits duplicated parent in a commit' '
-	commit2=$(echo NO | git commit-tree $P -p $commit0 -p $commit0) &&
-	git show --pretty=raw $commit2 >out &&
+test_expect_success 'bench commit-tree omits duplicated parent in a commit' '
+	commit2=$(echo NO | bench commit-tree $P -p $commit0 -p $commit0) &&
+	bench show --pretty=raw $commit2 >out &&
 	cat >match.sed <<-\EOF &&
 	s/^parent //p
 	/^author /q
 	EOF
 	parent=$(sed -n -f match.sed out | sort -u) &&
 	test "z$commit0" = "z$parent" &&
-	git show --pretty=raw $commit2 >out &&
+	bench show --pretty=raw $commit2 >out &&
 	test_stdout_line_count = 1 sed -n -f match.sed out
 '
 
@@ -1177,8 +1177,8 @@ test_expect_success 'update-index D/F conflict' '
 	mv path0 tmp &&
 	mv path2 path0 &&
 	mv tmp path2 &&
-	git update-index --add --replace path2 path0/file2 &&
-	git ls-files path0 >tmp &&
+	bench update-index --add --replace path2 path0/file2 &&
+	bench ls-files path0 >tmp &&
 	numpath0=$(wc -l <tmp) &&
 	test $numpath0 = 1
 '
@@ -1192,14 +1192,14 @@ test_expect_success 'very long name in the index handled sanely' '
 	a=${a}q &&
 
 	>path4 &&
-	git update-index --add path4 &&
-	git ls-files -s path4 >tmp &&
+	bench update-index --add path4 &&
+	bench ls-files -s path4 >tmp &&
 	(
 		sed -e "s/	.*/	/" tmp |
 		tr -d "\012" &&
 		echo "$a"
-	) | git update-index --index-info &&
-	git ls-files "a*" >tmp &&
+	) | bench update-index --index-info &&
+	bench ls-files "a*" >tmp &&
 	len=$(wc -c <tmp) &&
 	test $len = 4098
 '
@@ -1209,45 +1209,45 @@ test_expect_success 'very long name in the index handled sanely' '
 # `a` and `a/`.
 test_expect_success 'more update-index D/F conflicts' '
 	# empty the index to make sure our entry is last
-	git read-tree --empty &&
+	bench read-tree --empty &&
 	cacheinfo=100644,$(test_oid empty_blob) &&
-	git update-index --add --cacheinfo $cacheinfo,path5/a &&
+	bench update-index --add --cacheinfo $cacheinfo,path5/a &&
 
-	test_must_fail git update-index --add --cacheinfo $cacheinfo,path5/a/file &&
-	test_must_fail git update-index --add --cacheinfo $cacheinfo,path5/a/b/file &&
-	test_must_fail git update-index --add --cacheinfo $cacheinfo,path5/a/b/c/file &&
+	test_must_fail bench update-index --add --cacheinfo $cacheinfo,path5/a/file &&
+	test_must_fail bench update-index --add --cacheinfo $cacheinfo,path5/a/b/file &&
+	test_must_fail bench update-index --add --cacheinfo $cacheinfo,path5/a/b/c/file &&
 
 	# "a-" sorts between "a" and "a/"
-	git update-index --add --cacheinfo $cacheinfo,path5/a- &&
+	bench update-index --add --cacheinfo $cacheinfo,path5/a- &&
 
-	test_must_fail git update-index --add --cacheinfo $cacheinfo,path5/a/file &&
-	test_must_fail git update-index --add --cacheinfo $cacheinfo,path5/a/b/file &&
-	test_must_fail git update-index --add --cacheinfo $cacheinfo,path5/a/b/c/file &&
+	test_must_fail bench update-index --add --cacheinfo $cacheinfo,path5/a/file &&
+	test_must_fail bench update-index --add --cacheinfo $cacheinfo,path5/a/b/file &&
+	test_must_fail bench update-index --add --cacheinfo $cacheinfo,path5/a/b/c/file &&
 
 	cat >expected <<-\EOF &&
 	path5/a
 	path5/a-
 	EOF
-	git ls-files >actual &&
+	bench ls-files >actual &&
 	test_cmp expected actual
 '
 
-test_expect_success 'test_must_fail on a failing git command' '
-	test_must_fail git notacommand
+test_expect_success 'test_must_fail on a failing bench command' '
+	test_must_fail bench notacommand
 '
 
-test_expect_success 'test_must_fail on a failing git command with env' '
-	test_must_fail env var1=a var2=b git notacommand
+test_expect_success 'test_must_fail on a failing bench command with env' '
+	test_must_fail env var1=a var2=b bench notacommand
 '
 
-test_expect_success 'test_must_fail rejects a non-git command' '
+test_expect_success 'test_must_fail rejects a non-bench command' '
 	! test_must_fail grep ^$ notafile 2>err &&
-	grep -F "test_must_fail: only '"'"'git'"'"' is allowed" err
+	grep -F "test_must_fail: only '"'"'git'"'"' or '"'"'bench'"'"' is allowed" err
 '
 
-test_expect_success 'test_must_fail rejects a non-git command with env' '
+test_expect_success 'test_must_fail rejects a non-bench command with env' '
 	! test_must_fail env var1=a var2=b grep ^$ notafile 2>err &&
-	grep -F "test_must_fail: only '"'"'git'"'"' is allowed" err
+	grep -F "test_must_fail: only '"'"'git'"'"' or '"'"'bench'"'"' is allowed" err
 '
 
 test_done

@@ -767,7 +767,7 @@ const char *enter_repo(const char *path, unsigned flags)
 
 	if (!(flags & ENTER_REPO_STRICT)) {
 		static const char *suffix[] = {
-			"/.git", "", ".git/.git", ".git", NULL,
+			"/.bench", "", ".bench/.bench", ".bench", NULL,
 		};
 		const char *gitfile;
 		int len = strlen(path);
