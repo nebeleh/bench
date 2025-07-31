@@ -413,9 +413,9 @@ fail_return:
  * Like info/exclude and .gitignore, the attribute information can
  * come from many places.
  *
- * (1) .gitattributes file of the same directory;
- * (2) .gitattributes file of the parent directory if (1) does not have
- *      any match; this goes recursively upwards, just like .gitignore.
+ * (1) .benchattributes file of the same directory;
+ * (2) .benchattributes file of the parent directory if (1) does not have
+ *      any match; this goes recursively upwards, just like .benchignore.
  * (3) $GIT_DIR/info/attributes, which overrides both of the above.
  *
  * In the same file, later entries override the earlier match, so in the

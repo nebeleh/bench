@@ -180,8 +180,8 @@ int daemon_avoid_alias(const char *path);
  */
 int is_ntfs_dotgit(const char *name);
 int is_ntfs_dotgitmodules(const char *name);
-int is_ntfs_dotgitignore(const char *name);
-int is_ntfs_dotgitattributes(const char *name);
+int is_ntfs_dotbenchignore(const char *name);
+int is_ntfs_dotbenchattributes(const char *name);
 int is_ntfs_dotmailmap(const char *name);
 
 /*

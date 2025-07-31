@@ -383,7 +383,7 @@ struct merge_options_internal {
 	 * attr_index: hacky minimal index used for renormalization
 	 *
 	 * renormalization code _requires_ an index, though it only needs to
-	 * find a .gitattributes file within the index.  So, when
+	 * find a .benchattributes file within the index.  So, when
 	 * renormalization is important, we create a special index with just
 	 * that one file.
 	 */

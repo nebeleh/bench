@@ -258,7 +258,7 @@ struct pattern {
 };
 
 /*
- * One rule, as from a .gitattributes file.
+ * One rule, as from a .benchattributes file.
  *
  * If is_macro is true, then u.attr is a pointer to the git_attr being
  * defined.

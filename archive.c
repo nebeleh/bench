@@ -671,7 +671,7 @@ static int parse_archive_args(int argc, const char **argv,
 		OPT_STRING('o', "output", &output, N_("file"),
 			N_("write the archive to this file")),
 		OPT_BOOL(0, "worktree-attributes", &worktree_attributes,
-			N_("read .gitattributes in working directory")),
+			N_("read .benchattributes in working directory")),
 		OPT__VERBOSE(&verbose, N_("report archived files on stderr")),
 		{
 			.type = OPTION_STRING,

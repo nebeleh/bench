@@ -226,7 +226,7 @@ static int edit_patch(struct repository *repo,
 }
 
 static const char ignore_error[] =
-N_("The following paths are ignored by one of your .gitignore files:\n");
+N_("The following paths are ignored by one of your .benchignore files:\n");
 
 static int verbose, show_only, ignored_too, refresh_only;
 static int ignore_add_errors, intent_to_add, ignore_missing;

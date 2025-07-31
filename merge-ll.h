@@ -97,7 +97,7 @@ enum ll_merge_result {
 /**
  * Perform a three-way single-file merge in core.  This is a thin wrapper
  * around `xdl_merge` that takes the path and any merge backend specified in
- * `.gitattributes` or `.git/info/attributes` into account.
+ * `.benchattributes` or `.bench/info/attributes` into account.
  * Returns 0 for a clean merge.
  */
 enum ll_merge_result ll_merge(mmbuffer_t *result_buf,

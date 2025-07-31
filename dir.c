@@ -2904,7 +2904,7 @@ static void new_untracked_cache(struct index_state *istate, int flags)
 {
 	struct untracked_cache *uc = xcalloc(1, sizeof(*uc));
 	strbuf_init(&uc->ident, 100);
-	uc->exclude_per_dir = ".gitignore";
+	uc->exclude_per_dir = ".benchignore";
 	uc->dir_flags = flags >= 0 ? flags : new_untracked_cache_flags(istate);
 	set_untracked_ident(uc);
 	istate->untracked = uc;
@@ -3444,7 +3444,7 @@ static GIT_PATH_FUNC(git_path_info_exclude, "info/exclude")
 
 void setup_standard_excludes(struct dir_struct *dir)
 {
-	dir->exclude_per_dir = ".gitignore";
+	dir->exclude_per_dir = ".benchignore";
 
 	/* core.excludesfile defaulting to $XDG_CONFIG_HOME/git/ignore */
 	if (!excludes_file)

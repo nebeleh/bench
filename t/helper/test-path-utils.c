@@ -427,13 +427,13 @@ int cmd__path_utils(int argc, const char **argv)
 	}
 	if (argc > 2 && !strcmp(argv[1], "is_dotgitignore")) {
 		return check_dotfile("ignore", argv + 2,
-				     is_hfs_dotgitignore,
-				     is_ntfs_dotgitignore);
+				     is_hfs_dotbenchignore,
+				     is_ntfs_dotbenchignore);
 	}
 	if (argc > 2 && !strcmp(argv[1], "is_dotgitattributes")) {
 		return check_dotfile("attributes", argv + 2,
-				     is_hfs_dotgitattributes,
-				     is_ntfs_dotgitattributes);
+				     is_hfs_dotbenchattributes,
+				     is_ntfs_dotbenchattributes);
 	}
 	if (argc > 2 && !strcmp(argv[1], "is_dotmailmap")) {
 		return check_dotfile("mailmap", argv + 2,

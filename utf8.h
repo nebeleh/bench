@@ -60,8 +60,8 @@ int mbs_chrlen(const char **text, size_t *remainder_p, const char *encoding);
  */
 int is_hfs_dotgit(const char *path);
 int is_hfs_dotgitmodules(const char *path);
-int is_hfs_dotgitignore(const char *path);
-int is_hfs_dotgitattributes(const char *path);
+int is_hfs_dotbenchignore(const char *path);
+int is_hfs_dotbenchattributes(const char *path);
 int is_hfs_dotmailmap(const char *path);
 
 typedef enum {

@@ -11,7 +11,7 @@ init_vars () {
 
 enable_global_excludes () {
 	init_vars &&
-	git config core.excludesfile "$global_excludes"
+	bench config core.excludesfile "$global_excludes"
 }
 
 expect_in () {
@@ -75,11 +75,11 @@ test_check_ignore () {
 
 	init_vars &&
 	rm -f "$HOME/stdout" "$HOME/stderr" "$HOME/cmd" &&
-	echo git $global_args check-ignore $quiet_opt $verbose_opt $non_matching_opt $no_index_opt $args \
+	echo bench $global_args check-ignore $quiet_opt $verbose_opt $non_matching_opt $no_index_opt $args \
 		>"$HOME/cmd" &&
 	echo "$expect_code" >"$HOME/expected-exit-code" &&
 	test_expect_code "$expect_code" \
-		git $global_args check-ignore $quiet_opt $verbose_opt $non_matching_opt $no_index_opt $args \
+		bench $global_args check-ignore $quiet_opt $verbose_opt $non_matching_opt $no_index_opt $args \
 		>"$HOME/stdout" 2>"$HOME/stderr" &&
 	test_cmp "$HOME/expected-stdout" "$HOME/stdout" &&
 	stderr_empty_on_success "$expect_code"
@@ -185,13 +185,13 @@ test_expect_success 'setup' '
 	fi &&
 	(
 		cd a/submodule &&
-		git init &&
+		bench init &&
 		echo a >a &&
-		git add a &&
-		git commit -m"commit in submodule"
+		bench add a &&
+		bench commit -m"commit in submodule"
 	) &&
-	git add a/submodule &&
-	cat <<-\EOF >.gitignore &&
+	bench add a/submodule &&
+	cat <<-\EOF >.benchignore &&
 		one
 		ignored-*
 		top-level-dir/
@@ -202,12 +202,12 @@ test_expect_success 'setup' '
 		: >$dir/ignored-and-untracked &&
 		: >$dir/ignored-but-in-index || return 1
 	done &&
-	git add -f ignored-but-in-index a/ignored-but-in-index &&
-	cat <<-\EOF >a/.gitignore &&
+	bench add -f ignored-but-in-index a/ignored-but-in-index &&
+	cat <<-\EOF >a/.benchignore &&
 		two*
 		*three
 	EOF
-	cat <<-\EOF >a/b/.gitignore &&
+	cat <<-\EOF >a/b/.benchignore &&
 		four
 		five
 		# this comment should affect the line numbers
@@ -218,15 +218,15 @@ test_expect_success 'setup' '
 		!on*
 		!two
 	EOF
-	echo "seven" >a/b/ignored-dir/.gitignore &&
+	echo "seven" >a/b/ignored-dir/.benchignore &&
 	test -n "$HOME" &&
 	cat <<-\EOF >"$global_excludes" &&
 		globalone
 		!globaltwo
 		globalthree
 	EOF
-	mkdir .git/info &&
-	cat <<-\EOF >.git/info/exclude
+	mkdir .bench/info &&
+	cat <<-\EOF >.bench/info/exclude
 		per-repo
 	EOF
 '
@@ -306,7 +306,7 @@ test_expect_success_multi '-z without --stdin and superfluous arg' '' '
 
 test_expect_success_multi 'needs work tree' '' '
 	(
-		cd .git &&
+		cd .bench &&
 		test_check_ignore "foo" 128
 	) &&
 	stderr_contains "fatal: this operation must be run in a work tree"
@@ -338,11 +338,11 @@ do
 		"test_check_ignore '${subdir}non-existent' 1"
 
 	test_expect_success_multi "non-existent file $where ignored" \
-		".gitignore:1:one	${subdir}one" \
+		".benchignore:1:one	${subdir}one" \
 		"test_check_ignore '${subdir}one'"
 
 	test_expect_success_no_index_multi "non-existent file $where ignored" \
-		".gitignore:1:one	${subdir}one" \
+		".benchignore:1:one	${subdir}one" \
 		"test_check_ignore '${subdir}one'"
 
 	test_expect_success_multi "existing untracked file $where not ignored" \
@@ -358,23 +358,23 @@ do
 		"test_check_ignore '${subdir}ignored-but-in-index' 1"
 
 	test_expect_success_no_index_multi "existing tracked file $where shown as ignored" \
-		".gitignore:2:ignored-*	${subdir}ignored-but-in-index" \
+		".benchignore:2:ignored-*	${subdir}ignored-but-in-index" \
 		"test_check_ignore '${subdir}ignored-but-in-index'"
 
 	test_expect_success_multi "existing untracked file $where ignored" \
-		".gitignore:2:ignored-*	${subdir}ignored-and-untracked" \
+		".benchignore:2:ignored-*	${subdir}ignored-and-untracked" \
 		"test_check_ignore '${subdir}ignored-and-untracked'"
 
 	test_expect_success_no_index_multi "existing untracked file $where ignored" \
-		".gitignore:2:ignored-*	${subdir}ignored-and-untracked" \
+		".benchignore:2:ignored-*	${subdir}ignored-and-untracked" \
 		"test_check_ignore '${subdir}ignored-and-untracked'"
 
 	test_expect_success_multi "mix of file types $where" \
 "::	${subdir}non-existent
-.gitignore:1:one	${subdir}one
+.benchignore:1:one	${subdir}one
 ::	${subdir}not-ignored
 ::	${subdir}ignored-but-in-index
-.gitignore:2:ignored-*	${subdir}ignored-and-untracked" \
+.benchignore:2:ignored-*	${subdir}ignored-and-untracked" \
 		"test_check_ignore '
 			${subdir}non-existent
 			${subdir}one
@@ -385,10 +385,10 @@ do
 
 	test_expect_success_no_index_multi "mix of file types $where" \
 "::	${subdir}non-existent
-.gitignore:1:one	${subdir}one
+.benchignore:1:one	${subdir}one
 ::	${subdir}not-ignored
-.gitignore:2:ignored-*	${subdir}ignored-but-in-index
-.gitignore:2:ignored-*	${subdir}ignored-and-untracked" \
+.benchignore:2:ignored-*	${subdir}ignored-but-in-index
+.benchignore:2:ignored-*	${subdir}ignored-and-untracked" \
 		"test_check_ignore '
 			${subdir}non-existent
 			${subdir}one
@@ -407,7 +407,7 @@ test_expect_success 'sub-directory local ignore' '
 '
 
 test_expect_success 'sub-directory local ignore with --verbose'  '
-	expect "a/.gitignore:2:*three	a/3-three" &&
+	expect "a/.benchignore:2:*three	a/3-three" &&
 	test_check_ignore "--verbose a/3-three a/three-not-this-one"
 '
 
@@ -419,7 +419,7 @@ test_expect_success 'local ignore inside a sub-directory' '
 	)
 '
 test_expect_success 'local ignore inside a sub-directory with --verbose' '
-	expect "a/.gitignore:2:*three	3-three" &&
+	expect "a/.benchignore:2:*three	3-three" &&
 	(
 		cd a &&
 		test_check_ignore "--verbose 3-three three-not-this-one"
@@ -437,12 +437,12 @@ test_expect_success 'nested include of negated pattern with -q' '
 '
 
 test_expect_success 'nested include of negated pattern with -v' '
-	expect "a/b/.gitignore:8:!on*	a/b/one" &&
+	expect "a/b/.benchignore:8:!on*	a/b/one" &&
 	test_check_ignore "-v a/b/one" 0
 '
 
 test_expect_success 'nested include of negated pattern with -v -n' '
-	expect "a/b/.gitignore:8:!on*	a/b/one" &&
+	expect "a/b/.benchignore:8:!on*	a/b/one" &&
 	test_check_ignore "-v -n a/b/one" 0
 '
 
@@ -451,7 +451,7 @@ test_expect_success 'nested include of negated pattern with -v -n' '
 # test ignored sub-directories
 
 test_expect_success_multi 'ignored sub-directory' \
-	'a/b/.gitignore:5:ignored-dir/	a/b/ignored-dir' '
+	'a/b/.benchignore:5:ignored-dir/	a/b/ignored-dir' '
 	test_check_ignore "a/b/ignored-dir"
 '
 
@@ -466,9 +466,9 @@ test_expect_success 'multiple files inside ignored sub-directory' '
 
 test_expect_success 'multiple files inside ignored sub-directory with -v' '
 	expect_from_stdin <<-\EOF &&
-		a/b/.gitignore:5:ignored-dir/	a/b/ignored-dir/foo
-		a/b/.gitignore:5:ignored-dir/	a/b/ignored-dir/twoooo
-		a/b/.gitignore:5:ignored-dir/	a/b/ignored-dir/seven
+		a/b/.benchignore:5:ignored-dir/	a/b/ignored-dir/foo
+		a/b/.benchignore:5:ignored-dir/	a/b/ignored-dir/twoooo
+		a/b/.benchignore:5:ignored-dir/	a/b/ignored-dir/seven
 	EOF
 	test_check_ignore "-v a/b/ignored-dir/foo a/b/ignored-dir/twoooo a/b/ignored-dir/seven"
 '
@@ -488,11 +488,11 @@ test_expect_success 'cd to ignored sub-directory' '
 
 test_expect_success 'cd to ignored sub-directory with -v' '
 	expect_from_stdin <<-\EOF &&
-		a/b/.gitignore:5:ignored-dir/	foo
-		a/b/.gitignore:5:ignored-dir/	twoooo
-		a/b/.gitignore:8:!on*	../one
-		a/b/.gitignore:5:ignored-dir/	seven
-		.gitignore:1:one	../../one
+		a/b/.benchignore:5:ignored-dir/	foo
+		a/b/.benchignore:5:ignored-dir/	twoooo
+		a/b/.benchignore:8:!on*	../one
+		a/b/.benchignore:5:ignored-dir/	seven
+		.benchignore:1:one	../../one
 	EOF
 	(
 		cd a/b/ignored-dir &&
@@ -544,9 +544,9 @@ test_expect_success_multi 'submodule from subdirectory' '' '
 
 test_expect_success 'global ignore not yet enabled' '
 	expect_from_stdin <<-\EOF &&
-		.git/info/exclude:1:per-repo	per-repo
-		a/.gitignore:2:*three	a/globalthree
-		.git/info/exclude:1:per-repo	a/per-repo
+		.bench/info/exclude:1:per-repo	per-repo
+		a/.benchignore:2:*three	a/globalthree
+		.bench/info/exclude:1:per-repo	a/per-repo
 	EOF
 	test_check_ignore "-v globalone per-repo a/globalthree a/per-repo not-ignored a/globaltwo"
 '
@@ -567,10 +567,10 @@ test_expect_success 'global ignore with -v' '
 	enable_global_excludes &&
 	expect_from_stdin <<-EOF &&
 		$global_excludes:1:globalone	globalone
-		.git/info/exclude:1:per-repo	per-repo
+		.bench/info/exclude:1:per-repo	per-repo
 		$global_excludes:3:globalthree	globalthree
-		a/.gitignore:2:*three	a/globalthree
-		.git/info/exclude:1:per-repo	a/per-repo
+		a/.benchignore:2:*three	a/globalthree
+		.bench/info/exclude:1:per-repo	a/per-repo
 		$global_excludes:2:!globaltwo	globaltwo
 	EOF
 	test_check_ignore "-v globalone per-repo globalthree a/globalthree a/per-repo not-ignored globaltwo"
@@ -604,15 +604,15 @@ cat <<-\EOF >expected-default
 	a/b/twooo
 EOF
 cat <<-EOF >expected-verbose
-	.gitignore:1:one	one
-	.gitignore:1:one	a/one
-	a/b/.gitignore:8:!on*	a/b/on
-	a/b/.gitignore:8:!on*	a/b/one
-	a/b/.gitignore:8:!on*	a/b/one one
-	a/b/.gitignore:8:!on*	a/b/one two
-	a/b/.gitignore:8:!on*	"a/b/one\\"three"
-	a/b/.gitignore:9:!two	a/b/two
-	a/.gitignore:1:two*	a/b/twooo
+	.benchignore:1:one	one
+	.benchignore:1:one	a/one
+	a/b/.benchignore:8:!on*	a/b/on
+	a/b/.benchignore:8:!on*	a/b/one
+	a/b/.benchignore:8:!on*	a/b/one one
+	a/b/.benchignore:8:!on*	a/b/one two
+	a/b/.benchignore:8:!on*	"a/b/one\\"three"
+	a/b/.benchignore:9:!two	a/b/two
+	a/.benchignore:1:two*	a/b/twooo
 	$global_excludes:2:!globaltwo	globaltwo
 	$global_excludes:2:!globaltwo	a/globaltwo
 	$global_excludes:2:!globaltwo	a/b/globaltwo
@@ -683,18 +683,18 @@ EOF
 # aggregation of all the results, not just the final result.
 
 cat <<-EOF >expected-all
-	.gitignore:1:one	../one
+	.benchignore:1:one	../one
 	::	../not-ignored
-	.gitignore:1:one	one
+	.benchignore:1:one	one
 	::	not-ignored
-	a/b/.gitignore:8:!on*	b/on
-	a/b/.gitignore:8:!on*	b/one
-	a/b/.gitignore:8:!on*	b/one one
-	a/b/.gitignore:8:!on*	b/one two
-	a/b/.gitignore:8:!on*	"b/one\\"three"
-	a/b/.gitignore:9:!two	b/two
+	a/b/.benchignore:8:!on*	b/on
+	a/b/.benchignore:8:!on*	b/one
+	a/b/.benchignore:8:!on*	b/one one
+	a/b/.benchignore:8:!on*	b/one two
+	a/b/.benchignore:8:!on*	"b/one\\"three"
+	a/b/.benchignore:9:!two	b/two
 	::	b/not-ignored
-	a/.gitignore:1:two*	b/twooo
+	a/.benchignore:1:two*	b/twooo
 	$global_excludes:2:!globaltwo	../globaltwo
 	$global_excludes:2:!globaltwo	globaltwo
 	$global_excludes:2:!globaltwo	b/globaltwo
@@ -759,7 +759,7 @@ done
 
 test_expect_success PIPE 'streaming support for --stdin' '
 	mkfifo in out &&
-	(git check-ignore -n -v --stdin <in >out &) &&
+	(bench check-ignore -n -v --stdin <in >out &) &&
 
 	# We cannot just "echo >in" because check-ignore would get EOF
 	# after echo exited; instead we open the descriptor in our
@@ -778,7 +778,7 @@ test_expect_success PIPE 'streaming support for --stdin' '
 	test_when_finished "exec 8<&-" &&
 	echo >&9 one &&
 	read response <&8 &&
-	echo "$response" | grep "^\.gitignore:1:one	one" &&
+	echo "$response" | grep "^\.benchignore:1:one	one" &&
 	echo >&9 two &&
 	read response <&8 &&
 	echo "$response" | grep "^::	two"
@@ -789,7 +789,7 @@ test_expect_success 'existing file and directory' '
 	test_when_finished "rmdir top-level-dir" &&
 	>one &&
 	mkdir top-level-dir &&
-	git check-ignore one top-level-dir >actual &&
+	bench check-ignore one top-level-dir >actual &&
 	grep one actual &&
 	grep top-level-dir actual
 '
@@ -799,7 +799,7 @@ test_expect_success 'existing directory and file' '
 	test_when_finished "rmdir top-level-dir" &&
 	>one &&
 	mkdir top-level-dir &&
-	git check-ignore top-level-dir one >actual &&
+	bench check-ignore top-level-dir one >actual &&
 	grep one actual &&
 	grep top-level-dir actual
 '
@@ -808,8 +808,8 @@ test_expect_success 'exact prefix matching (with root)' '
 	test_when_finished rm -r a &&
 	mkdir -p a/git a/git-foo &&
 	touch a/git/foo a/git-foo/bar &&
-	echo /git/ >a/.gitignore &&
-	git check-ignore a/git a/git/foo a/git-foo a/git-foo/bar >actual &&
+	echo /git/ >a/.benchignore &&
+	bench check-ignore a/git a/git/foo a/git-foo a/git-foo/bar >actual &&
 	cat >expect <<-\EOF &&
 	a/git
 	a/git/foo
@@ -821,8 +821,8 @@ test_expect_success 'exact prefix matching (without root)' '
 	test_when_finished rm -r a &&
 	mkdir -p a/git a/git-foo &&
 	touch a/git/foo a/git-foo/bar &&
-	echo git/ >a/.gitignore &&
-	git check-ignore a/git a/git/foo a/git-foo a/git-foo/bar >actual &&
+	echo git/ >a/.benchignore &&
+	bench check-ignore a/git a/git/foo a/git-foo a/git-foo/bar >actual &&
 	cat >expect <<-\EOF &&
 	a/git
 	a/git/foo
@@ -831,12 +831,12 @@ test_expect_success 'exact prefix matching (without root)' '
 '
 
 test_expect_success 'directories and ** matches' '
-	cat >.gitignore <<-\EOF &&
+	cat >.benchignore <<-\EOF &&
 	data/**
 	!data/**/
 	!data/**/*.txt
 	EOF
-	git check-ignore file \
+	bench check-ignore file \
 		data/file data/data1/file1 data/data1/file1.txt \
 		data/data2/file2 data/data2/file2.txt >actual &&
 	cat >expect <<-\EOF &&
@@ -859,7 +859,7 @@ test_expect_success 'trailing whitespace is ignored' '
 	cat >expect <<EOF &&
 whitespace/untracked
 EOF
-	git ls-files -o -X ignore whitespace >actual 2>err &&
+	bench ls-files -o -X ignore whitespace >actual 2>err &&
 	test_cmp expect actual &&
 	test_must_be_empty err
 '
@@ -871,7 +871,7 @@ test_expect_success !MINGW 'quoting allows trailing whitespace' '
 	>whitespace/untracked &&
 	echo "whitespace/trailing\\ \\ " >ignore &&
 	echo whitespace/untracked >expect &&
-	git ls-files -o -X ignore whitespace >actual 2>err &&
+	bench ls-files -o -X ignore whitespace >actual 2>err &&
 	test_cmp expect actual &&
 	test_must_be_empty err
 '
@@ -895,24 +895,24 @@ test_expect_success !MINGW,!CYGWIN 'correct handling of backslashes' '
 	whitespace/trailing 6 \\a\\Z
 	EOF
 	echo whitespace/untracked >expect &&
-	git ls-files -o -X ignore whitespace >actual 2>err &&
+	bench ls-files -o -X ignore whitespace >actual 2>err &&
 	test_cmp expect actual &&
 	test_must_be_empty err
 '
 
 test_expect_success 'info/exclude trumps core.excludesfile' '
 	echo >>global-excludes usually-ignored &&
-	echo >>.git/info/exclude "!usually-ignored" &&
+	echo >>.bench/info/exclude "!usually-ignored" &&
 	>usually-ignored &&
 	echo "?? usually-ignored" >expect &&
 
-	git status --porcelain usually-ignored >actual &&
+	bench status --porcelain usually-ignored >actual &&
 	test_cmp expect actual
 '
 
 test_expect_success SYMLINKS 'set up ignore file for symlink tests' '
 	echo "*" >ignore &&
-	rm -f .gitignore .git/info/exclude
+	rm -f .benchignore .bench/info/exclude
 '
 
 test_expect_success SYMLINKS 'symlinks respected in core.excludesFile' '
@@ -920,35 +920,35 @@ test_expect_success SYMLINKS 'symlinks respected in core.excludesFile' '
 	ln -s ignore symlink &&
 	test_config core.excludesFile "$(pwd)/symlink" &&
 	echo file >expect &&
-	git check-ignore file >actual 2>err &&
+	bench check-ignore file >actual 2>err &&
 	test_cmp expect actual &&
 	test_must_be_empty err
 '
 
 test_expect_success SYMLINKS 'symlinks respected in info/exclude' '
-	test_when_finished "rm .git/info/exclude" &&
-	ln -s ../../ignore .git/info/exclude &&
+	test_when_finished "rm .bench/info/exclude" &&
+	ln -s ../../ignore .bench/info/exclude &&
 	echo file >expect &&
-	git check-ignore file >actual 2>err &&
+	bench check-ignore file >actual 2>err &&
 	test_cmp expect actual &&
 	test_must_be_empty err
 '
 
 test_expect_success SYMLINKS 'symlinks not respected in-tree' '
-	test_when_finished "rm .gitignore" &&
-	ln -s ignore .gitignore &&
+	test_when_finished "rm .benchignore" &&
+	ln -s ignore .benchignore &&
 	mkdir subdir &&
-	ln -s ignore subdir/.gitignore &&
-	test_must_fail git check-ignore subdir/file >actual 2>err &&
+	ln -s ignore subdir/.benchignore &&
+	test_must_fail bench check-ignore subdir/file >actual 2>err &&
 	test_must_be_empty actual &&
-	test_grep "unable to access.*gitignore" err
+	test_grep "unable to access.*benchignore" err
 '
 
 test_expect_success EXPENSIVE 'large exclude file ignored in tree' '
-	test_when_finished "rm .gitignore" &&
-	dd if=/dev/zero of=.gitignore bs=101M count=1 &&
-	git ls-files -o --exclude-standard 2>err &&
-	echo "warning: ignoring excessively large pattern file: .gitignore" >expect &&
+	test_when_finished "rm .benchignore" &&
+	dd if=/dev/zero of=.benchignore bs=101M count=1 &&
+	bench ls-files -o --exclude-standard 2>err &&
+	echo "warning: ignoring excessively large pattern file: .benchignore" >expect &&
 	test_cmp expect err
 '
 

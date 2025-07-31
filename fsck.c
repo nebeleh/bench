@@ -673,22 +673,22 @@ static int fsck_tree(const struct object_id *tree_oid,
 						 ".gitmodules is a symbolic link");
 		}
 
-		if (is_hfs_dotgitattributes(name) || is_ntfs_dotgitattributes(name)) {
+		if (is_hfs_dotbenchattributes(name) || is_ntfs_dotbenchattributes(name)) {
 			if (!S_ISLNK(mode))
 				oidset_insert(&options->gitattributes_found,
 					      entry_oid);
 			else
 				retval += report(options, tree_oid, OBJ_TREE,
 						 FSCK_MSG_GITATTRIBUTES_SYMLINK,
-						 ".gitattributes is a symlink");
+						 ".benchattributes is a symlink");
 		}
 
 		if (S_ISLNK(mode)) {
-			if (is_hfs_dotgitignore(name) ||
-			    is_ntfs_dotgitignore(name))
+			if (is_hfs_dotbenchignore(name) ||
+			    is_ntfs_dotbenchignore(name))
 				retval += report(options, tree_oid, OBJ_TREE,
 						 FSCK_MSG_GITIGNORE_SYMLINK,
-						 ".gitignore is a symlink");
+						 ".benchignore is a symlink");
 			if (is_hfs_dotmailmap(name) ||
 			    is_ntfs_dotmailmap(name))
 				retval += report(options, tree_oid, OBJ_TREE,
@@ -1186,7 +1186,7 @@ static int fsck_blob(const struct object_id *oid, const char *buf,
 			 */
 			return report(options, oid, OBJ_BLOB,
 					FSCK_MSG_GITATTRIBUTES_LARGE,
-					".gitattributes too large to parse");
+					".benchattributes too large to parse");
 		}
 
 		for (ptr = buf; *ptr; ) {
@@ -1194,7 +1194,7 @@ static int fsck_blob(const struct object_id *oid, const char *buf,
 			if (eol - ptr >= ATTR_MAX_LINE_LENGTH) {
 				ret |= report(options, oid, OBJ_BLOB,
 					      FSCK_MSG_GITATTRIBUTES_LINE_LENGTH,
-					      ".gitattributes has too long lines to parse");
+					      ".benchattributes has too long lines to parse");
 				break;
 			}
 
@@ -1326,7 +1326,7 @@ int fsck_finish(struct fsck_options *options)
 			  options, ".gitmodules");
 	ret |= fsck_blobs(&options->gitattributes_found, &options->gitattributes_done,
 			  FSCK_MSG_GITATTRIBUTES_MISSING, FSCK_MSG_GITATTRIBUTES_BLOB,
-			  options, ".gitattributes");
+			  options, ".benchattributes");
 
 	return ret;
 }

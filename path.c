@@ -1617,14 +1617,14 @@ int is_ntfs_dotgitmodules(const char *name)
 	return is_ntfs_dot_str(name, "gitmodules", "gi7eba");
 }
 
-int is_ntfs_dotgitignore(const char *name)
+int is_ntfs_dotbenchignore(const char *name)
 {
-	return is_ntfs_dot_str(name, "gitignore", "gi250a");
+	return is_ntfs_dot_str(name, "benchignore", "be362c");
 }
 
-int is_ntfs_dotgitattributes(const char *name)
+int is_ntfs_dotbenchattributes(const char *name)
 {
-	return is_ntfs_dot_str(name, "gitattributes", "gi7d29");
+	return is_ntfs_dot_str(name, "benchattributes", "be19ae");
 }
 
 int is_ntfs_dotmailmap(const char *name)

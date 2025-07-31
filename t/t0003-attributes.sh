@@ -1,6 +1,6 @@
 #!/bin/sh
 
-test_description=gitattributes
+test_description=benchattributes
 
 TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
@@ -63,7 +63,7 @@ attr_check_source () {
 }
 
 test_expect_success 'open-quoted pathname' '
-	echo "\"a test=a" >.gitattributes &&
+	echo "\"a test=a" >.benchattributes &&
 	attr_check a unspecified
 '
 
@@ -80,19 +80,19 @@ test_expect_success 'setup' '
 		echo "offon -test test" &&
 		echo "no notest" &&
 		echo "A/e/F test=A/e/F"
-	) >.gitattributes &&
+	) >.benchattributes &&
 	(
 		echo "g test=a/g" &&
 		echo "b/g test=a/b/g"
-	) >a/.gitattributes &&
+	) >a/.benchattributes &&
 	(
 		echo "h test=a/b/h" &&
 		echo "d/* test=a/b/d/*" &&
 		echo "d/yes notest"
-	) >a/b/.gitattributes &&
+	) >a/b/.benchattributes &&
 	(
 		echo "global test=global"
-	) >"$HOME"/global-gitattributes &&
+	) >"$HOME"/global-benchattributes &&
 	cat <<-EOF >expect-all
 	f: test: f
 	a/f: test: f
@@ -115,11 +115,11 @@ test_expect_success 'setup' '
 
 test_expect_success 'setup branches' '
 	mkdir -p foo/bar &&
-	test_commit --printf "add .gitattributes" foo/bar/.gitattributes \
+	test_commit --printf "add .benchattributes" foo/bar/.benchattributes \
 		"f test=f\na/i test=n\n" tag-1 &&
-	test_commit --printf "add .gitattributes" foo/bar/.gitattributes \
+	test_commit --printf "add .benchattributes" foo/bar/.benchattributes \
 		"g test=g\na/i test=m\n" tag-2 &&
-	rm foo/bar/.gitattributes
+	rm foo/bar/.benchattributes
 '
 
 test_expect_success 'command line checks' '
@@ -233,11 +233,11 @@ test_expect_success 'prefixes are not confused with leading directories' '
 
 test_expect_success 'core.attributesfile' '
 	attr_check global unspecified &&
-	bench config core.attributesfile "$HOME/global-gitattributes" &&
+	bench config core.attributesfile "$HOME/global-benchattributes" &&
 	attr_check global global &&
-	bench config core.attributesfile "~/global-gitattributes" &&
+	bench config core.attributesfile "~/global-benchattributes" &&
 	attr_check global global &&
-	echo "global test=precedence" >>.gitattributes &&
+	echo "global test=precedence" >>.benchattributes &&
 	attr_check global precedence
 '
 
@@ -262,7 +262,7 @@ test_expect_success 'attribute test: --cached option' '
 	bench check-attr --cached --stdin --all <stdin-all >tmp &&
 	sort tmp >actual &&
 	test_must_be_empty actual &&
-	bench add .gitattributes a/.gitattributes a/b/.gitattributes &&
+	bench add .benchattributes a/.benchattributes a/b/.benchattributes &&
 	bench check-attr --cached --stdin --all <stdin-all >tmp &&
 	sort tmp >actual &&
 	test_cmp specified-all actual
@@ -274,18 +274,18 @@ test_expect_success 'root subdir attribute test' '
 '
 
 test_expect_success 'negative patterns' '
-	echo "!f test=bar" >.gitattributes &&
+	echo "!f test=bar" >.benchattributes &&
 	bench check-attr test -- '"'"'!f'"'"' 2>errors &&
 	test_grep "Negative patterns are ignored" errors
 '
 
 test_expect_success 'patterns starting with exclamation' '
-	echo "\!f test=foo" >.gitattributes &&
+	echo "\!f test=foo" >.benchattributes &&
 	attr_check "!f" foo
 '
 
 test_expect_success '"**" test' '
-	echo "**/f foo=bar" >.gitattributes &&
+	echo "**/f foo=bar" >.benchattributes &&
 	cat <<\EOF >expect &&
 f: foo: bar
 a/f: foo: bar
@@ -301,7 +301,7 @@ EOF
 '
 
 test_expect_success '"**" with no slashes test' '
-	echo "a**f foo=bar" >.gitattributes &&
+	echo "a**f foo=bar" >.benchattributes &&
 	bench check-attr foo -- "f" >actual &&
 	cat <<\EOF >expect &&
 f: foo: unspecified
@@ -324,7 +324,7 @@ EOF
 test_expect_success 'using --git-dir and --work-tree' '
 	mkdir unreal real &&
 	bench init real &&
-	echo "file test=in-real" >real/.gitattributes &&
+	echo "file test=in-real" >real/.benchattributes &&
 	(
 		cd unreal &&
 		attr_check file in-real "--git-dir ../real/.bench --work-tree ../real"
@@ -350,7 +350,7 @@ test_expect_success 'bare repository: check that .gitattribute is ignored' '
 		(
 			echo "f	test=f" &&
 			echo "a/i test=a/i"
-		) >.gitattributes &&
+		) >.benchattributes &&
 		attr_check f unspecified &&
 		attr_check a/f unspecified &&
 		attr_check a/c/f unspecified &&
@@ -384,12 +384,12 @@ test_expect_success 'attr.tree when HEAD is unborn' '
 	)
 '
 
-test_expect_success 'bad attr source defaults to reading .gitattributes file' '
+test_expect_success 'bad attr source defaults to reading .benchattributes file' '
 	test_when_finished rm -rf empty &&
 	bench init empty &&
 	(
 		cd empty &&
-		echo "f/path test=val" >.gitattributes &&
+		echo "f/path test=val" >.benchattributes &&
 		echo "f/path: test: val" >expect &&
 		bench -c attr.tree=HEAD check-attr test -- f/path >actual 2>err &&
 		test_must_be_empty err &&
@@ -397,10 +397,10 @@ test_expect_success 'bad attr source defaults to reading .gitattributes file' '
 	)
 '
 
-test_expect_success 'bare repo no longer defaults to reading .gitattributes from HEAD' '
+test_expect_success 'bare repo no longer defaults to reading .benchattributes from HEAD' '
 	test_when_finished rm -rf test bare_with_gitattribute &&
 	bench init test &&
-	test_commit -C test gitattributes .gitattributes "f/path test=val" &&
+	test_commit -C test benchattributes .benchattributes "f/path test=val" &&
 	bench clone --bare test bare_with_gitattribute &&
 
 	echo "f/path: test: unspecified" >expect &&
@@ -419,9 +419,9 @@ test_expect_success 'precedence of --attr-source, GIT_ATTR_SOURCE, then attr.tre
 	(
 		cd empty &&
 		bench checkout -b attr-source &&
-		test_commit "val1" .gitattributes "f/path test=val1" &&
+		test_commit "val1" .benchattributes "f/path test=val1" &&
 		bench checkout -b attr-tree &&
-		test_commit "val2" .gitattributes "f/path test=val2" &&
+		test_commit "val2" .benchattributes "f/path test=val2" &&
 		bench checkout attr-source &&
 		echo "f/path: test: val1" >expect &&
 		GIT_ATTR_SOURCE=attr-source bench -c attr.tree=attr-tree --attr-source=attr-source \
@@ -487,7 +487,7 @@ test_expect_success 'bare repository: test info/attributes' '
 '
 
 test_expect_success 'binary macro expanded by -a' '
-	echo "file binary" >.gitattributes &&
+	echo "file binary" >.benchattributes &&
 	cat >expect <<-\EOF &&
 	file: binary: set
 	file: diff: unset
@@ -499,7 +499,7 @@ test_expect_success 'binary macro expanded by -a' '
 '
 
 test_expect_success 'query binary macro directly' '
-	echo "file binary" >.gitattributes &&
+	echo "file binary" >.benchattributes &&
 	echo file: binary: set >expect &&
 	bench check-attr binary file >actual &&
 	test_cmp expect actual
@@ -507,7 +507,7 @@ test_expect_success 'query binary macro directly' '
 
 test_expect_success SYMLINKS 'set up symlink tests' '
 	echo "* test" >attr &&
-	rm -f .gitattributes
+	rm -f .benchattributes
 '
 
 test_expect_success SYMLINKS 'symlinks respected in core.attributesFile' '
@@ -525,17 +525,17 @@ test_expect_success SYMLINKS 'symlinks respected in info/attributes' '
 '
 
 test_expect_success SYMLINKS 'symlinks not respected in-tree' '
-	test_when_finished "rm -rf .gitattributes subdir" &&
-	ln -s attr .gitattributes &&
+	test_when_finished "rm -rf .benchattributes subdir" &&
+	ln -s attr .benchattributes &&
 	mkdir subdir &&
-	ln -s ../attr subdir/.gitattributes &&
+	ln -s ../attr subdir/.benchattributes &&
 	attr_check_basic subdir/file unspecified &&
-	test_grep "unable to access.*gitattributes" err
+	test_grep "unable to access.*benchattributes" err
 '
 
 test_expect_success 'large attributes line ignored in tree' '
-	test_when_finished "rm .gitattributes" &&
-	printf "path %02043d" 1 >.gitattributes &&
+	test_when_finished "rm .benchattributes" &&
+	printf "path %02043d" 1 >.benchattributes &&
 	bench check-attr --all path >actual 2>err &&
 	echo "warning: ignoring overly long attributes line 1" >expect &&
 	test_cmp expect err &&
@@ -543,12 +543,12 @@ test_expect_success 'large attributes line ignored in tree' '
 '
 
 test_expect_success 'large attributes line ignores trailing content in tree' '
-	test_when_finished "rm .gitattributes" &&
+	test_when_finished "rm .benchattributes" &&
 	# older versions of Git broke lines at 2048 bytes; the 2045 bytes
 	# of 0-padding here is accounting for the three bytes of "a 1", which
 	# would knock "trailing" to the "next" line, where it would be
 	# erroneously parsed.
-	printf "a %02045dtrailing attribute\n" 1 >.gitattributes &&
+	printf "a %02045dtrailing attribute\n" 1 >.benchattributes &&
 	bench check-attr --all trailing >actual 2>err &&
 	echo "warning: ignoring overly long attributes line 1" >expect &&
 	test_cmp expect err &&
@@ -556,17 +556,17 @@ test_expect_success 'large attributes line ignores trailing content in tree' '
 '
 
 test_expect_success EXPENSIVE 'large attributes file ignored in tree' '
-	test_when_finished "rm .gitattributes" &&
-	dd if=/dev/zero of=.gitattributes bs=1048576 count=101 2>/dev/null &&
+	test_when_finished "rm .benchattributes" &&
+	dd if=/dev/zero of=.benchattributes bs=1048576 count=101 2>/dev/null &&
 	bench check-attr --all path >/dev/null 2>err &&
-	echo "warning: ignoring overly large gitattributes file ${SQ}.gitattributes${SQ}" >expect &&
+	echo "warning: ignoring overly large benchattributes file ${SQ}.benchattributes${SQ}" >expect &&
 	test_cmp expect err
 '
 
 test_expect_success 'large attributes line ignored in index' '
-	test_when_finished "bench update-index --remove .gitattributes" &&
+	test_when_finished "bench update-index --remove .benchattributes" &&
 	blob=$(printf "path %02043d" 1 | bench hash-object -w --stdin) &&
-	bench update-index --add --cacheinfo 100644,$blob,.gitattributes &&
+	bench update-index --add --cacheinfo 100644,$blob,.benchattributes &&
 	bench check-attr --cached --all path >actual 2>err &&
 	echo "warning: ignoring overly long attributes line 1" >expect &&
 	test_cmp expect err &&
@@ -574,9 +574,9 @@ test_expect_success 'large attributes line ignored in index' '
 '
 
 test_expect_success 'large attributes line ignores trailing content in index' '
-	test_when_finished "bench update-index --remove .gitattributes" &&
+	test_when_finished "bench update-index --remove .benchattributes" &&
 	blob=$(printf "a %02045dtrailing attribute\n" 1 | bench hash-object -w --stdin) &&
-	bench update-index --add --cacheinfo 100644,$blob,.gitattributes &&
+	bench update-index --add --cacheinfo 100644,$blob,.benchattributes &&
 	bench check-attr --cached --all trailing >actual 2>err &&
 	echo "warning: ignoring overly long attributes line 1" >expect &&
 	test_cmp expect err &&
@@ -584,21 +584,21 @@ test_expect_success 'large attributes line ignores trailing content in index' '
 '
 
 test_expect_success EXPENSIVE 'large attributes file ignored in index' '
-	test_when_finished "bench update-index --remove .gitattributes" &&
+	test_when_finished "bench update-index --remove .benchattributes" &&
 	blob=$(dd if=/dev/zero bs=1048576 count=101 2>/dev/null | bench hash-object -w --stdin) &&
-	bench update-index --add --cacheinfo 100644,$blob,.gitattributes &&
+	bench update-index --add --cacheinfo 100644,$blob,.benchattributes &&
 	bench check-attr --cached --all path >/dev/null 2>err &&
-	echo "warning: ignoring overly large gitattributes blob ${SQ}.gitattributes${SQ}" >expect &&
+	echo "warning: ignoring overly large benchattributes blob ${SQ}.benchattributes${SQ}" >expect &&
 	test_cmp expect err
 '
 
 test_expect_success EXPENSIVE 'large attributes blob ignored' '
-	test_when_finished "bench update-index --remove .gitattributes" &&
+	test_when_finished "bench update-index --remove .benchattributes" &&
 	blob=$(dd if=/dev/zero bs=1048576 count=101 2>/dev/null | bench hash-object -w --stdin) &&
-	bench update-index --add --cacheinfo 100644,$blob,.gitattributes &&
+	bench update-index --add --cacheinfo 100644,$blob,.benchattributes &&
 	tree="$(bench write-tree)" &&
 	bench check-attr --cached --all --source="$tree" path >/dev/null 2>err &&
-	echo "warning: ignoring overly large gitattributes blob ${SQ}.gitattributes${SQ}" >expect &&
+	echo "warning: ignoring overly large benchattributes blob ${SQ}.benchattributes${SQ}" >expect &&
 	test_cmp expect err
 '
 
@@ -649,18 +649,18 @@ test_expect_success 'check object mode attributes work for submodules' '
 '
 
 test_expect_success 'we do not allow user defined builtin_* attributes' '
-	echo "foo* builtin_foo" >.gitattributes &&
-	bench add .gitattributes 2>actual &&
-	echo "builtin_foo is not a valid attribute name: .gitattributes:1" >expect &&
+	echo "foo* builtin_foo" >.benchattributes &&
+	bench add .benchattributes 2>actual &&
+	echo "builtin_foo is not a valid attribute name: .benchattributes:1" >expect &&
 	test_cmp expect actual
 '
 
 test_expect_success 'user defined builtin_objectmode values are ignored' '
-	echo "foo* builtin_objectmode=12345" >.gitattributes &&
-	bench add .gitattributes &&
+	echo "foo* builtin_objectmode=12345" >.benchattributes &&
+	bench add .benchattributes &&
 	>foo_1 &&
 	attr_check_object_mode_basic foo_1 100644 &&
-	echo "builtin_objectmode is not a valid attribute name: .gitattributes:1" >expect &&
+	echo "builtin_objectmode is not a valid attribute name: .benchattributes:1" >expect &&
 	test_cmp expect err
 '
 

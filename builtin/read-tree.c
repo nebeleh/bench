@@ -64,8 +64,8 @@ static int exclude_per_directory_cb(const struct option *opt, const char *arg,
 
 	if (!opts->update)
 		die("--exclude-per-directory is meaningless unless -u");
-	if (strcmp(arg, ".gitignore"))
-		die("--exclude-per-directory argument must be .gitignore");
+	if (strcmp(arg, ".benchignore"))
+		die("--exclude-per-directory argument must be .benchignore");
 	return 0;
 }
 
@@ -146,7 +146,7 @@ int cmd_read_tree(int argc,
 		OPT_BOOL('u', NULL, &opts.update,
 			 N_("update working tree with merge result")),
 		OPT_CALLBACK_F(0, "exclude-per-directory", &opts,
-		  N_("gitignore"),
+		  N_("benchignore"),
 		  N_("allow explicitly ignored files to be overwritten"),
 		  PARSE_OPT_NONEG, exclude_per_directory_cb),
 		OPT_BOOL('i', NULL, &opts.index_only,

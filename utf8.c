@@ -778,14 +778,14 @@ int is_hfs_dotgitmodules(const char *path)
 	return is_hfs_dot_str(path, "gitmodules");
 }
 
-int is_hfs_dotgitignore(const char *path)
+int is_hfs_dotbenchignore(const char *path)
 {
-	return is_hfs_dot_str(path, "gitignore");
+	return is_hfs_dot_str(path, "benchignore");
 }
 
-int is_hfs_dotgitattributes(const char *path)
+int is_hfs_dotbenchattributes(const char *path)
 {
-	return is_hfs_dot_str(path, "gitattributes");
+	return is_hfs_dot_str(path, "benchattributes");
 }
 
 int is_hfs_dotmailmap(const char *path)
