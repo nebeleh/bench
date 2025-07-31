@@ -13,7 +13,8 @@
 /GIT-USER-AGENT
 /GIT-VERSION-FILE
 /git
-/git-add
+/bench
+/bench-*
 /git-am
 /git-annotate
 /git-apply

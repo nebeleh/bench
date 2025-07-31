@@ -1,9 +1,15 @@
 /git
+/bench
 /git-cvsserver
+/bench-cvsserver
 /git-receive-pack
+/bench-receive-pack
 /git-shell
+/bench-shell
 /git-upload-archive
+/bench-upload-archive
 /git-upload-pack
+/bench-upload-pack
 /scalar
 /test-fake-ssh
 /test-tool
