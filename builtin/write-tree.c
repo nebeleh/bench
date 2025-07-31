@@ -13,7 +13,7 @@
 #include "parse-options.h"
 
 static const char * const write_tree_usage[] = {
-	N_("git write-tree [--missing-ok] [--prefix=<prefix>/]"),
+	N_("bench write-tree [--missing-ok] [--prefix=<prefix>/]"),
 	NULL
 };
 
@@ -25,7 +25,7 @@ int cmd_write_tree(int argc,
 	int flags = 0, ret;
 	const char *tree_prefix = NULL;
 	struct object_id oid;
-	const char *me = "git-write-tree";
+	const char *me = "bench-write-tree";
 	struct option write_tree_options[] = {
 		OPT_BIT(0, "missing-ok", &flags, N_("allow missing objects"),
 			WRITE_TREE_MISSING_OK),
