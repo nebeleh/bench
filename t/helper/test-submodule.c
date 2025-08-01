@@ -145,7 +145,7 @@ static int cmd__submodule_config_list(int argc, const char **argv)
 	setup_git_directory();
 
 	if (argc == 2)
-		return print_config_from_gitmodules(the_repository, argv[1]);
+		return print_config_from_benchmodules(the_repository, argv[1]);
 	usage_with_options(usage, options);
 }
 
@@ -165,10 +165,10 @@ static int cmd__submodule_config_set(int argc, const char **argv)
 
 	/* Equivalent to ACTION_SET in builtin/config.c */
 	if (argc == 3) {
-		if (!is_writing_gitmodules_ok())
-			die("please make sure that the .gitmodules file is in the working tree");
+		if (!is_writing_benchmodules_ok())
+			die("please make sure that the .benchmodules file is in the working tree");
 
-		return config_set_in_gitmodules_file_gently(argv[1], argv[2]);
+		return config_set_in_benchmodules_file_gently(argv[1], argv[2]);
 	}
 	usage_with_options(usage, options);
 }
@@ -186,9 +186,9 @@ static int cmd__submodule_config_unset(int argc, const char **argv)
 	setup_git_directory();
 
 	if (argc == 2) {
-		if (!is_writing_gitmodules_ok())
-			die("please make sure that the .gitmodules file is in the working tree");
-		return config_set_in_gitmodules_file_gently(argv[1], NULL);
+		if (!is_writing_benchmodules_ok())
+			die("please make sure that the .benchmodules file is in the working tree");
+		return config_set_in_benchmodules_file_gently(argv[1], NULL);
 	}
 	usage_with_options(usage, options);
 }
@@ -205,7 +205,7 @@ static int cmd__submodule_config_writeable(int argc, const char **argv UNUSED)
 	setup_git_directory();
 
 	if (argc == 1)
-		return is_writing_gitmodules_ok() ? 0 : -1;
+		return is_writing_benchmodules_ok() ? 0 : -1;
 
 	usage_with_options(usage, options);
 }

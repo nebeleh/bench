@@ -95,7 +95,7 @@ static struct {
 
 static const char turn_off_instructions[] =
 N_("\n"
-   "Disable this message with \"git config set advice.%s false\"");
+   "Disable this message with \"bench config set advice.%s false\"");
 
 static void vadvise(const char *advice, int display_instructions,
 		    const char *key, va_list params)
@@ -283,11 +283,11 @@ void detach_advice(const char *new_name)
 	"If you want to create a new branch to retain commits you create, you may\n"
 	"do so (now or later) by using -c with the switch command. Example:\n"
 	"\n"
-	"  git switch -c <new-branch-name>\n"
+	"  bench switch -c <new-branch-name>\n"
 	"\n"
 	"Or undo this operation with:\n"
 	"\n"
-	"  git switch -\n"
+	"  bench switch -\n"
 	"\n"
 	"Turn off this advice by setting config variable advice.detachedHead to false\n\n");
 

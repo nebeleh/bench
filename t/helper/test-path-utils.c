@@ -420,10 +420,10 @@ int cmd__path_utils(int argc, const char **argv)
 	if (argc == 2 && !strcmp(argv[1], "dirname"))
 		return test_function(dirname_data, posix_dirname, argv[1]);
 
-	if (argc > 2 && !strcmp(argv[1], "is_dotgitmodules")) {
+	if (argc > 2 && !strcmp(argv[1], "is_dotbenchmodules")) {
 		return check_dotfile("modules", argv + 2,
-				     is_hfs_dotgitmodules,
-				     is_ntfs_dotgitmodules);
+				     is_hfs_dotbenchmodules,
+				     is_ntfs_dotbenchmodules);
 	}
 	if (argc > 2 && !strcmp(argv[1], "is_dotgitignore")) {
 		return check_dotfile("ignore", argv + 2,

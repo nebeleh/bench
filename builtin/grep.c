@@ -461,8 +461,8 @@ static int grep_submodule(struct grep_opt *opt,
 	repos_to_free[repos_to_free_nr++] = subrepo;
 
 	/*
-	 * NEEDSWORK: repo_read_gitmodules() might call
-	 * odb_add_to_alternates_memory() via config_from_gitmodules(). This
+	 * NEEDSWORK: repo_read_benchmodules() might call
+	 * odb_add_to_alternates_memory() via config_from_benchmodules(). This
 	 * operation causes a race condition with concurrent object readings
 	 * performed by the worker threads. That's why we need obj_read_lock()
 	 * here. It should be removed once it's no longer necessary to add the
@@ -496,7 +496,7 @@ static int grep_submodule(struct grep_opt *opt,
 	 *
 	 * Note that this list is not exhaustive.
 	 */
-	repo_read_gitmodules(subrepo, 0);
+	repo_read_benchmodules(subrepo, 0);
 
 	/*
 	 * All code paths tested by test code no longer need submodule ODBs to
@@ -754,7 +754,7 @@ static int grep_objects(struct grep_opt *opt, const struct pathspec *pathspec,
 		if (recurse_submodules) {
 			submodule_free(opt->repo);
 			obj_read_lock();
-			gitmodules_config_oid(&real_obj->oid);
+			benchmodules_config_oid(&real_obj->oid);
 			obj_read_unlock();
 		}
 		if (grep_object(opt, pathspec, real_obj, list->objects[i].name,
@@ -1211,7 +1211,7 @@ int cmd_grep(int argc,
 		 * reading/initialization once worker threads are started.
 		 */
 		if (recurse_submodules)
-			repo_read_gitmodules(the_repository, 1);
+			repo_read_benchmodules(the_repository, 1);
 		if (startup_info->have_repository)
 			(void)get_packed_git(the_repository);
 

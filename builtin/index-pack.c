@@ -136,7 +136,7 @@ static int nr_threads;
 static int from_stdin;
 static int strict;
 static int do_fsck_object;
-static struct fsck_options fsck_options = FSCK_OPTIONS_MISSING_GITMODULES;
+static struct fsck_options fsck_options = FSCK_OPTIONS_MISSING_BENCHMODULES;
 static int verbose;
 static const char *progress_title;
 static int show_resolving_progress;

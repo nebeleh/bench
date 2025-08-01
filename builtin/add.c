@@ -297,14 +297,14 @@ static const char embedded_advice[] = N_(
 "the embedded repository and will not know how to obtain it.\n"
 "If you meant to add a submodule, use:\n"
 "\n"
-"	git submodule add <url> %s\n"
+"	bench submodule add <url> %s\n"
 "\n"
 "If you added this path by mistake, you can remove it from the\n"
 "index with:\n"
 "\n"
-"	git rm --cached %s\n"
+"	bench rm --cached %s\n"
 "\n"
-"See \"git help submodule\" for more information."
+"See \"bench help submodule\" for more information."
 );
 
 static void check_embedded_repo(const char *path)

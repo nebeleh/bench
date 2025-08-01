@@ -179,7 +179,7 @@ int daemon_avoid_alias(const char *path);
  * details.
  */
 int is_ntfs_dotgit(const char *name);
-int is_ntfs_dotgitmodules(const char *name);
+int is_ntfs_dotbenchmodules(const char *name);
 int is_ntfs_dotbenchignore(const char *name);
 int is_ntfs_dotbenchattributes(const char *name);
 int is_ntfs_dotmailmap(const char *name);

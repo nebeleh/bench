@@ -49,7 +49,7 @@ static int server_supports_filtering;
 static int advertise_sid;
 static struct shallow_lock shallow_lock;
 static const char *alternate_shallow_file;
-static struct fsck_options fsck_options = FSCK_OPTIONS_MISSING_GITMODULES;
+static struct fsck_options fsck_options = FSCK_OPTIONS_MISSING_BENCHMODULES;
 static struct strbuf fsck_msg_types = STRBUF_INIT;
 static struct string_list uri_protocols = STRING_LIST_INIT_DUP;
 
@@ -878,7 +878,7 @@ static void create_promisor_file(const char *keep_name,
 	strbuf_release(&promisor_name);
 }
 
-static void parse_gitmodules_oids(int fd, struct oidset *gitmodules_oids)
+static void parse_benchmodules_oids(int fd, struct oidset *benchmodules_oids)
 {
 	int len = the_hash_algo->hexsz + 1; /* hash + NL */
 
@@ -894,7 +894,7 @@ static void parse_gitmodules_oids(int fd, struct oidset *gitmodules_oids)
 			die("invalid length read %d", read_len);
 		if (parse_oid_hex(hex_hash, &oid, &end) || *end != '\n')
 			die("invalid hash");
-		oidset_insert(gitmodules_oids, &oid);
+		oidset_insert(benchmodules_oids, &oid);
 	} while (1);
 }
 
@@ -917,7 +917,7 @@ static int get_pack(struct fetch_pack_args *args,
 		    int xd[2], struct string_list *pack_lockfiles,
 		    struct strvec *index_pack_args,
 		    struct ref **sought, int nr_sought,
-		    struct oidset *gitmodules_oids)
+		    struct oidset *benchmodules_oids)
 {
 	struct async demux;
 	int do_keep = args->keep_pack;
@@ -1045,7 +1045,7 @@ static int get_pack(struct fetch_pack_args *args,
 			string_list_append_nodup(pack_lockfiles, pack_lockfile);
 		else
 			free(pack_lockfile);
-		parse_gitmodules_oids(cmd.out, gitmodules_oids);
+		parse_benchmodules_oids(cmd.out, benchmodules_oids);
 		close(cmd.out);
 	}
 
@@ -1225,7 +1225,7 @@ static struct ref *do_fetch_pack(struct fetch_pack_args *args,
 	} else
 		alternate_shallow_file = NULL;
 	if (get_pack(args, fd, pack_lockfiles, NULL, sought, nr_sought,
-		     &fsck_options.gitmodules_found))
+		     &fsck_options.benchmodules_found))
 		die(_("git fetch-pack: fetch failed."));
 	if (fsck_finish(&fsck_options))
 		die("fsck failed");
@@ -1785,7 +1785,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 
 			if (get_pack(args, fd, pack_lockfiles,
 				     packfile_uris.nr ? &index_pack_args : NULL,
-				     sought, nr_sought, &fsck_options.gitmodules_found))
+				     sought, nr_sought, &fsck_options.benchmodules_found))
 				die(_("git fetch-pack: fetch failed."));
 			do_check_stateless_delimiter(args->stateless_rpc, &reader);
 
@@ -1828,7 +1828,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 
 		packname[the_hash_algo->hexsz] = '\0';
 
-		parse_gitmodules_oids(cmd.out, &fsck_options.gitmodules_found);
+		parse_benchmodules_oids(cmd.out, &fsck_options.benchmodules_found);
 
 		close(cmd.out);
 

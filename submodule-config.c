@@ -23,7 +23,7 @@
 /*
  * submodule cache lookup structure
  * There is one shared set of 'struct submodule' entries which can be
- * looked up by their sha1 blob id of the .gitmodules file and either
+ * looked up by their sha1 blob id of the .benchmodules file and either
  * using path or name as key.
  * for_path stores submodule entries with path as key
  * for_name stores submodule entries with name as key
@@ -32,7 +32,7 @@ struct submodule_cache {
 	struct hashmap for_path;
 	struct hashmap for_name;
 	unsigned initialized:1;
-	unsigned gitmodules_read:1;
+	unsigned benchmodules_read:1;
 };
 
 /*
@@ -60,7 +60,7 @@ static int config_path_cmp(const void *cmp_data UNUSED,
 	b = container_of(entry_or_key, const struct submodule_entry, ent);
 
 	return strcmp(a->config->path, b->config->path) ||
-	       !oideq(&a->config->gitmodules_oid, &b->config->gitmodules_oid);
+	       !oideq(&a->config->benchmodules_oid, &b->config->benchmodules_oid);
 }
 
 static int config_name_cmp(const void *cmp_data UNUSED,
@@ -74,7 +74,7 @@ static int config_name_cmp(const void *cmp_data UNUSED,
 	b = container_of(entry_or_key, const struct submodule_entry, ent);
 
 	return strcmp(a->config->name, b->config->name) ||
-	       !oideq(&a->config->gitmodules_oid, &b->config->gitmodules_oid);
+	       !oideq(&a->config->benchmodules_oid, &b->config->benchmodules_oid);
 }
 
 static struct submodule_cache *submodule_cache_alloc(void)
@@ -111,7 +111,7 @@ static void submodule_cache_clear(struct submodule_cache *cache)
 	/*
 	 * We iterate over the name hash here to be symmetric with the
 	 * allocation of struct submodule entries. Each is allocated by
-	 * their .gitmodules blob sha1 and submodule name.
+	 * their .benchmodules blob sha1 and submodule name.
 	 */
 	hashmap_for_each_entry(&cache->for_name, &iter, entry,
 				ent /* member name */)
@@ -120,7 +120,7 @@ static void submodule_cache_clear(struct submodule_cache *cache)
 	hashmap_clear_and_free(&cache->for_path, struct submodule_entry, ent);
 	hashmap_clear_and_free(&cache->for_name, struct submodule_entry, ent);
 	cache->initialized = 0;
-	cache->gitmodules_read = 0;
+	cache->benchmodules_read = 0;
 }
 
 void submodule_cache_free(struct submodule_cache *cache)
@@ -138,7 +138,7 @@ static unsigned int hash_oid_string(const struct object_id *oid,
 static void cache_put_path(struct submodule_cache *cache,
 			   struct submodule *submodule)
 {
-	unsigned int hash = hash_oid_string(&submodule->gitmodules_oid,
+	unsigned int hash = hash_oid_string(&submodule->benchmodules_oid,
 					    submodule->path);
 	struct submodule_entry *e = xmalloc(sizeof(*e));
 	hashmap_entry_init(&e->ent, hash);
@@ -149,7 +149,7 @@ static void cache_put_path(struct submodule_cache *cache,
 static void cache_remove_path(struct submodule_cache *cache,
 			      struct submodule *submodule)
 {
-	unsigned int hash = hash_oid_string(&submodule->gitmodules_oid,
+	unsigned int hash = hash_oid_string(&submodule->benchmodules_oid,
 					    submodule->path);
 	struct submodule_entry e;
 	struct submodule_entry *removed;
@@ -162,7 +162,7 @@ static void cache_remove_path(struct submodule_cache *cache,
 static void cache_add(struct submodule_cache *cache,
 		      struct submodule *submodule)
 {
-	unsigned int hash = hash_oid_string(&submodule->gitmodules_oid,
+	unsigned int hash = hash_oid_string(&submodule->benchmodules_oid,
 					    submodule->name);
 	struct submodule_entry *e = xmalloc(sizeof(*e));
 	hashmap_entry_init(&e->ent, hash);
@@ -171,14 +171,14 @@ static void cache_add(struct submodule_cache *cache,
 }
 
 static const struct submodule *cache_lookup_path(struct submodule_cache *cache,
-		const struct object_id *gitmodules_oid, const char *path)
+		const struct object_id *benchmodules_oid, const char *path)
 {
 	struct submodule_entry *entry;
-	unsigned int hash = hash_oid_string(gitmodules_oid, path);
+	unsigned int hash = hash_oid_string(benchmodules_oid, path);
 	struct submodule_entry key;
 	struct submodule key_config;
 
-	oidcpy(&key_config.gitmodules_oid, gitmodules_oid);
+	oidcpy(&key_config.benchmodules_oid, benchmodules_oid);
 	key_config.path = path;
 
 	hashmap_entry_init(&key.ent, hash);
@@ -191,14 +191,14 @@ static const struct submodule *cache_lookup_path(struct submodule_cache *cache,
 }
 
 static struct submodule *cache_lookup_name(struct submodule_cache *cache,
-		const struct object_id *gitmodules_oid, const char *name)
+		const struct object_id *benchmodules_oid, const char *name)
 {
 	struct submodule_entry *entry;
-	unsigned int hash = hash_oid_string(gitmodules_oid, name);
+	unsigned int hash = hash_oid_string(benchmodules_oid, name);
 	struct submodule_entry key;
 	struct submodule key_config;
 
-	oidcpy(&key_config.gitmodules_oid, gitmodules_oid);
+	oidcpy(&key_config.benchmodules_oid, benchmodules_oid);
 	key_config.name = name;
 
 	hashmap_entry_init(&key.ent, hash);
@@ -385,12 +385,12 @@ static int name_and_item_from_var(const char *var, struct strbuf *name,
 }
 
 static struct submodule *lookup_or_create_by_name(struct submodule_cache *cache,
-		const struct object_id *gitmodules_oid, const char *name)
+		const struct object_id *benchmodules_oid, const char *name)
 {
 	struct submodule *submodule;
 	struct strbuf name_buf = STRBUF_INIT;
 
-	submodule = cache_lookup_name(cache, gitmodules_oid, name);
+	submodule = cache_lookup_name(cache, benchmodules_oid, name);
 	if (submodule)
 		return submodule;
 
@@ -408,7 +408,7 @@ static struct submodule *lookup_or_create_by_name(struct submodule_cache *cache,
 	submodule->branch = NULL;
 	submodule->recommend_shallow = -1;
 
-	oidcpy(&submodule->gitmodules_oid, gitmodules_oid);
+	oidcpy(&submodule->benchmodules_oid, benchmodules_oid);
 
 	cache_add(cache, submodule);
 
@@ -535,7 +535,7 @@ static void warn_multiple_config(const struct object_id *treeish_name,
 	const char *commit_string = "WORKTREE";
 	if (treeish_name)
 		commit_string = oid_to_hex(treeish_name);
-	warning("%s:.gitmodules, multiple configurations found for "
+	warning("%s:.benchmodules, multiple configurations found for "
 			"'submodule.%s.%s'. Skipping second one!",
 			commit_string, name, option);
 }
@@ -549,12 +549,12 @@ static void warn_command_line_option(const char *var, const char *value)
 struct parse_config_parameter {
 	struct submodule_cache *cache;
 	const struct object_id *treeish_name;
-	const struct object_id *gitmodules_oid;
+	const struct object_id *benchmodules_oid;
 	int overwrite;
 };
 
 /*
- * Parse a config item from .gitmodules.
+ * Parse a config item from .benchmodules.
  *
  * This does not handle submodule-related configuration from the main
  * config store (.git/config, etc).  Callers are responsible for
@@ -573,7 +573,7 @@ static int parse_config(const char *var, const char *value,
 		return 0;
 
 	submodule = lookup_or_create_by_name(me->cache,
-					     me->gitmodules_oid,
+					     me->benchmodules_oid,
 					     name.buf);
 
 	if (!strcmp(item.buf, "path")) {
@@ -593,7 +593,7 @@ static int parse_config(const char *var, const char *value,
 		}
 	} else if (!strcmp(item.buf, "fetchrecursesubmodules")) {
 		/* when parsing worktree configurations we can die early */
-		int die_on_error = is_null_oid(me->gitmodules_oid);
+		int die_on_error = is_null_oid(me->benchmodules_oid);
 		if (!me->overwrite &&
 		    submodule->fetch_recurse != RECURSE_SUBMODULES_NONE)
 			warn_multiple_config(me->treeish_name, submodule->name,
@@ -666,26 +666,26 @@ static int parse_config(const char *var, const char *value,
 	return ret;
 }
 
-static int gitmodule_oid_from_commit(const struct object_id *treeish_name,
-				     struct object_id *gitmodules_oid,
+static int benchmodule_oid_from_commit(const struct object_id *treeish_name,
+				     struct object_id *benchmodules_oid,
 				     struct strbuf *rev)
 {
 	int ret = 0;
 
 	if (is_null_oid(treeish_name)) {
-		oidclr(gitmodules_oid, the_repository->hash_algo);
+		oidclr(benchmodules_oid, the_repository->hash_algo);
 		return 1;
 	}
 
-	strbuf_addf(rev, "%s:.gitmodules", oid_to_hex(treeish_name));
-	if (repo_get_oid(the_repository, rev->buf, gitmodules_oid) >= 0)
+	strbuf_addf(rev, "%s:.benchmodules", oid_to_hex(treeish_name));
+	if (repo_get_oid(the_repository, rev->buf, benchmodules_oid) >= 0)
 		ret = 1;
 
 	return ret;
 }
 
 /* This does a lookup of a submodule configuration by name or by path
- * (key) with on-demand reading of the appropriate .gitmodules from
+ * (key) with on-demand reading of the appropriate .benchmodules from
  * revisions.
  */
 static const struct submodule *config_from(struct submodule_cache *cache,
@@ -717,7 +717,7 @@ static const struct submodule *config_from(struct submodule_cache *cache,
 		return entry->config;
 	}
 
-	if (!gitmodule_oid_from_commit(treeish_name, &oid, &rev))
+	if (!benchmodule_oid_from_commit(treeish_name, &oid, &rev))
 		goto out;
 
 	switch (lookup_type) {
@@ -739,7 +739,7 @@ static const struct submodule *config_from(struct submodule_cache *cache,
 	/* fill the submodule config into the cache */
 	parameter.cache = cache;
 	parameter.treeish_name = treeish_name;
-	parameter.gitmodules_oid = &oid;
+	parameter.benchmodules_oid = &oid;
 	parameter.overwrite = 0;
 	git_config_from_mem(parse_config, CONFIG_ORIGIN_SUBMODULE_BLOB, rev.buf,
 			    config, config_size, &parameter, CONFIG_SCOPE_UNKNOWN, NULL);
@@ -773,14 +773,14 @@ static void submodule_cache_check_init(struct repository *repo)
 }
 
 /*
- * Note: This function is private for a reason, the '.gitmodules' file should
+ * Note: This function is private for a reason, the '.benchmodules' file should
  * not be used as a mechanism to retrieve arbitrary configuration stored in
  * the repository.
  *
- * Runs the provided config function on the '.gitmodules' file found in the
+ * Runs the provided config function on the '.benchmodules' file found in the
  * working directory.
  */
-static void config_from_gitmodules(config_fn_t fn, struct repository *repo, void *data)
+static void config_from_benchmodules(config_fn_t fn, struct repository *repo, void *data)
 {
 	if (repo->worktree) {
 		struct git_config_source config_source = {
@@ -791,11 +791,11 @@ static void config_from_gitmodules(config_fn_t fn, struct repository *repo, void
 		char *file;
 		char *oidstr = NULL;
 
-		file = repo_worktree_path(repo, GITMODULES_FILE);
+		file = repo_worktree_path(repo, BENCHMODULES_FILE);
 		if (file_exists(file)) {
 			config_source.file = file;
-		} else if (repo_get_oid(repo, GITMODULES_INDEX, &oid) >= 0 ||
-			   repo_get_oid(repo, GITMODULES_HEAD, &oid) >= 0) {
+		} else if (repo_get_oid(repo, BENCHMODULES_INDEX, &oid) >= 0 ||
+			   repo_get_oid(repo, BENCHMODULES_HEAD, &oid) >= 0) {
 			config_source.blob = oidstr = xstrdup(oid_to_hex(&oid));
 			if (repo != the_repository)
 				odb_add_submodule_source_by_path(the_repository->objects,
@@ -812,7 +812,7 @@ out:
 	}
 }
 
-static int gitmodules_cb(const char *var, const char *value,
+static int benchmodules_cb(const char *var, const char *value,
 			 const struct config_context *ctx, void *data)
 {
 	struct repository *repo = data;
@@ -820,50 +820,50 @@ static int gitmodules_cb(const char *var, const char *value,
 
 	parameter.cache = repo->submodule_cache;
 	parameter.treeish_name = NULL;
-	parameter.gitmodules_oid = null_oid(the_hash_algo);
+	parameter.benchmodules_oid = null_oid(the_hash_algo);
 	parameter.overwrite = 1;
 
 	return parse_config(var, value, ctx, &parameter);
 }
 
-void repo_read_gitmodules(struct repository *repo, int skip_if_read)
+void repo_read_benchmodules(struct repository *repo, int skip_if_read)
 {
 	submodule_cache_check_init(repo);
 
-	if (repo->submodule_cache->gitmodules_read && skip_if_read)
+	if (repo->submodule_cache->benchmodules_read && skip_if_read)
 		return;
 
 	if (repo_read_index(repo) < 0)
 		return;
 
-	if (!is_gitmodules_unmerged(repo->index))
-		config_from_gitmodules(gitmodules_cb, repo, repo);
+	if (!is_benchmodules_unmerged(repo->index))
+		config_from_benchmodules(benchmodules_cb, repo, repo);
 
-	repo->submodule_cache->gitmodules_read = 1;
+	repo->submodule_cache->benchmodules_read = 1;
 }
 
-void gitmodules_config_oid(const struct object_id *commit_oid)
+void benchmodules_config_oid(const struct object_id *commit_oid)
 {
 	struct strbuf rev = STRBUF_INIT;
 	struct object_id oid;
 
 	submodule_cache_check_init(the_repository);
 
-	if (gitmodule_oid_from_commit(commit_oid, &oid, &rev)) {
-		git_config_from_blob_oid(gitmodules_cb, rev.buf,
+	if (benchmodule_oid_from_commit(commit_oid, &oid, &rev)) {
+		git_config_from_blob_oid(benchmodules_cb, rev.buf,
 					 the_repository, &oid, the_repository,
 					 CONFIG_SCOPE_UNKNOWN);
 	}
 	strbuf_release(&rev);
 
-	the_repository->submodule_cache->gitmodules_read = 1;
+	the_repository->submodule_cache->benchmodules_read = 1;
 }
 
 const struct submodule *submodule_from_name(struct repository *r,
 					    const struct object_id *treeish_name,
 		const char *name)
 {
-	repo_read_gitmodules(r, 1);
+	repo_read_benchmodules(r, 1);
 	return config_from(r->submodule_cache, treeish_name, name, lookup_name);
 }
 
@@ -871,7 +871,7 @@ const struct submodule *submodule_from_path(struct repository *r,
 					    const struct object_id *treeish_name,
 		const char *path)
 {
-	repo_read_gitmodules(r, 1);
+	repo_read_benchmodules(r, 1);
 	return config_from(r->submodule_cache, treeish_name, path, lookup_path);
 }
 
@@ -964,7 +964,7 @@ static int config_print_callback(const char *var, const char *value,
 	return 0;
 }
 
-int print_config_from_gitmodules(struct repository *repo, const char *key)
+int print_config_from_benchmodules(struct repository *repo, const char *key)
 {
 	int ret;
 	char *store_key;
@@ -973,20 +973,20 @@ int print_config_from_gitmodules(struct repository *repo, const char *key)
 	if (ret < 0)
 		return CONFIG_INVALID_KEY;
 
-	config_from_gitmodules(config_print_callback, repo, store_key);
+	config_from_benchmodules(config_print_callback, repo, store_key);
 
 	free(store_key);
 	return 0;
 }
 
-int config_set_in_gitmodules_file_gently(const char *key, const char *value)
+int config_set_in_benchmodules_file_gently(const char *key, const char *value)
 {
 	int ret;
 
-	ret = git_config_set_in_file_gently(GITMODULES_FILE, key, NULL, value);
+	ret = git_config_set_in_file_gently(BENCHMODULES_FILE, key, NULL, value);
 	if (ret < 0)
 		/* Maybe the user already did that, don't error out here */
-		warning(_("Could not update .gitmodules entry %s"), key);
+		warning(_("Could not update .benchmodules entry %s"), key);
 
 	return ret;
 }
@@ -996,7 +996,7 @@ struct fetch_config {
 	int *recurse_submodules;
 };
 
-static int gitmodules_fetch_config(const char *var, const char *value,
+static int benchmodules_fetch_config(const char *var, const char *value,
 				   const struct config_context *ctx,
 				   void *cb)
 {
@@ -1016,16 +1016,16 @@ static int gitmodules_fetch_config(const char *var, const char *value,
 	return 0;
 }
 
-void fetch_config_from_gitmodules(int *max_children, int *recurse_submodules)
+void fetch_config_from_benchmodules(int *max_children, int *recurse_submodules)
 {
 	struct fetch_config config = {
 		.max_children = max_children,
 		.recurse_submodules = recurse_submodules
 	};
-	config_from_gitmodules(gitmodules_fetch_config, the_repository, &config);
+	config_from_benchmodules(benchmodules_fetch_config, the_repository, &config);
 }
 
-static int gitmodules_update_clone_config(const char *var, const char *value,
+static int benchmodules_update_clone_config(const char *var, const char *value,
 					  const struct config_context *ctx,
 					  void *cb)
 {
@@ -1035,7 +1035,7 @@ static int gitmodules_update_clone_config(const char *var, const char *value,
 	return 0;
 }
 
-void update_clone_config_from_gitmodules(int *max_jobs)
+void update_clone_config_from_benchmodules(int *max_jobs)
 {
-	config_from_gitmodules(gitmodules_update_clone_config, the_repository, &max_jobs);
+	config_from_benchmodules(benchmodules_update_clone_config, the_repository, &max_jobs);
 }

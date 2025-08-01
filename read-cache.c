@@ -1000,7 +1000,7 @@ inside:
 				if (is_hfs_dotgit(path))
 					return PATH_INVALID;
 				if (S_ISLNK(mode)) {
-					if (is_hfs_dotgitmodules(path))
+					if (is_hfs_dotbenchmodules(path))
 						return PATH_INVALID;
 				}
 			}
@@ -1012,7 +1012,7 @@ inside:
 				if (is_ntfs_dotgit(path))
 					return PATH_INVALID;
 				if (S_ISLNK(mode)) {
-					if (is_ntfs_dotgitmodules(path))
+					if (is_ntfs_dotbenchmodules(path))
 						return PATH_INVALID;
 				}
 			}
@@ -1032,7 +1032,7 @@ inside:
 			if (is_ntfs_dotgit(path))
 				return PATH_INVALID;
 			if (S_ISLNK(mode)) {
-				if (is_ntfs_dotgitmodules(path))
+				if (is_ntfs_dotbenchmodules(path))
 					return PATH_INVALID;
 			}
 		}

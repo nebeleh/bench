@@ -734,9 +734,9 @@ static struct service_cmd {
 	{"GET", "/objects/pack/pack-[0-9a-f]{40}\\.idx$", get_idx_file},
 	{"GET", "/objects/pack/pack-[0-9a-f]{64}\\.idx$", get_idx_file},
 
-	{"POST", "/git-upload-pack$", service_rpc},
-	{"POST", "/git-upload-archive$", service_rpc},
-	{"POST", "/git-receive-pack$", service_rpc}
+	{"POST", "/bench-upload-pack$", service_rpc},
+	{"POST", "/bench-upload-archive$", service_rpc},
+	{"POST", "/bench-receive-pack$", service_rpc}
 };
 
 static int bad_request(struct strbuf *hdr, const struct service_cmd *c)

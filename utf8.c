@@ -773,9 +773,9 @@ int is_hfs_dotgit(const char *path)
 	return is_hfs_dot_str(path, "git");
 }
 
-int is_hfs_dotgitmodules(const char *path)
+int is_hfs_dotbenchmodules(const char *path)
 {
-	return is_hfs_dot_str(path, "gitmodules");
+	return is_hfs_dot_str(path, "benchmodules");
 }
 
 int is_hfs_dotbenchignore(const char *path)

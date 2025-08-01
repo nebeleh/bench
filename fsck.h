@@ -60,14 +60,14 @@ enum fsck_msg_type {
 	FUNC(TREE_NOT_SORTED, ERROR) \
 	FUNC(UNKNOWN_TYPE, ERROR) \
 	FUNC(ZERO_PADDED_DATE, ERROR) \
-	FUNC(GITMODULES_MISSING, ERROR) \
-	FUNC(GITMODULES_BLOB, ERROR) \
-	FUNC(GITMODULES_LARGE, ERROR) \
-	FUNC(GITMODULES_NAME, ERROR) \
-	FUNC(GITMODULES_SYMLINK, ERROR) \
-	FUNC(GITMODULES_URL, ERROR) \
-	FUNC(GITMODULES_PATH, ERROR) \
-	FUNC(GITMODULES_UPDATE, ERROR) \
+	FUNC(BENCHMODULES_MISSING, ERROR) \
+	FUNC(BENCHMODULES_BLOB, ERROR) \
+	FUNC(BENCHMODULES_LARGE, ERROR) \
+	FUNC(BENCHMODULES_NAME, ERROR) \
+	FUNC(BENCHMODULES_SYMLINK, ERROR) \
+	FUNC(BENCHMODULES_URL, ERROR) \
+	FUNC(BENCHMODULES_PATH, ERROR) \
+	FUNC(BENCHMODULES_UPDATE, ERROR) \
 	FUNC(GITATTRIBUTES_MISSING, ERROR) \
 	FUNC(GITATTRIBUTES_LARGE, ERROR) \
 	FUNC(GITATTRIBUTES_LINE_LENGTH, ERROR) \
@@ -85,7 +85,7 @@ enum fsck_msg_type {
 	/* infos (reported as warnings, but ignored by default) */ \
 	FUNC(BAD_FILEMODE, INFO) \
 	FUNC(EMPTY_PACKED_REFS_FILE, INFO) \
-	FUNC(GITMODULES_PARSE, INFO) \
+	FUNC(BENCHMODULES_PARSE, INFO) \
 	FUNC(GITIGNORE_SYMLINK, INFO) \
 	FUNC(GITATTRIBUTES_SYMLINK, INFO) \
 	FUNC(MAILMAP_SYMLINK, INFO) \
@@ -140,7 +140,7 @@ int fsck_objects_error_function(struct fsck_options *o,
 				void *fsck_report,
 				enum fsck_msg_type msg_type, enum fsck_msg_id msg_id,
 				const char *message);
-int fsck_objects_error_cb_print_missing_gitmodules(struct fsck_options *o,
+int fsck_objects_error_cb_print_missing_benchmodules(struct fsck_options *o,
 						   void *fsck_report,
 						   enum fsck_msg_type msg_type,
 						   enum fsck_msg_id msg_id,
@@ -170,8 +170,8 @@ struct fsck_options {
 	unsigned verbose;
 	enum fsck_msg_type *msg_type;
 	struct oidset skip_oids;
-	struct oidset gitmodules_found;
-	struct oidset gitmodules_done;
+	struct oidset benchmodules_found;
+	struct oidset benchmodules_done;
 	struct oidset gitattributes_found;
 	struct oidset gitattributes_done;
 	kh_oid_map_t *object_names;
@@ -179,27 +179,27 @@ struct fsck_options {
 
 #define FSCK_OPTIONS_DEFAULT { \
 	.skip_oids = OIDSET_INIT, \
-	.gitmodules_found = OIDSET_INIT, \
-	.gitmodules_done = OIDSET_INIT, \
+	.benchmodules_found = OIDSET_INIT, \
+	.benchmodules_done = OIDSET_INIT, \
 	.gitattributes_found = OIDSET_INIT, \
 	.gitattributes_done = OIDSET_INIT, \
 	.error_func = fsck_objects_error_function \
 }
 #define FSCK_OPTIONS_STRICT { \
 	.strict = 1, \
-	.gitmodules_found = OIDSET_INIT, \
-	.gitmodules_done = OIDSET_INIT, \
+	.benchmodules_found = OIDSET_INIT, \
+	.benchmodules_done = OIDSET_INIT, \
 	.gitattributes_found = OIDSET_INIT, \
 	.gitattributes_done = OIDSET_INIT, \
 	.error_func = fsck_objects_error_function, \
 }
-#define FSCK_OPTIONS_MISSING_GITMODULES { \
+#define FSCK_OPTIONS_MISSING_BENCHMODULES { \
 	.strict = 1, \
-	.gitmodules_found = OIDSET_INIT, \
-	.gitmodules_done = OIDSET_INIT, \
+	.benchmodules_found = OIDSET_INIT, \
+	.benchmodules_done = OIDSET_INIT, \
 	.gitattributes_found = OIDSET_INIT, \
 	.gitattributes_done = OIDSET_INIT, \
-	.error_func = fsck_objects_error_cb_print_missing_gitmodules, \
+	.error_func = fsck_objects_error_cb_print_missing_benchmodules, \
 }
 #define FSCK_REFS_OPTIONS_DEFAULT { \
 	.error_func = fsck_refs_error_function, \

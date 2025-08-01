@@ -9,7 +9,7 @@
  * The submodule config cache API allows to read submodule
  * configurations/information from specified revisions. Internally
  * information is lazily read into a cache that is used to avoid
- * unnecessary parsing of the same .gitmodules files. Lookups can be done by
+ * unnecessary parsing of the same .benchmodules files. Lookups can be done by
  * submodule path or name.
  *
  * Usage
@@ -39,8 +39,8 @@ struct submodule {
 	const char *ignore;
 	const char *branch;
 	struct submodule_update_strategy update_strategy;
-	/* the object id of the responsible .gitmodules file */
-	struct object_id gitmodules_oid;
+	/* the object id of the responsible .benchmodules file */
+	struct object_id benchmodules_oid;
 	int recommend_shallow;
 };
 struct submodule_cache;
@@ -56,8 +56,8 @@ int option_fetch_parse_recurse_submodules(const struct option *opt,
 					  const char *arg, int unset);
 int parse_update_recurse_submodules_arg(const char *opt, const char *arg);
 int parse_push_recurse_submodules_arg(const char *opt, const char *arg);
-void repo_read_gitmodules(struct repository *repo, int skip_if_read);
-void gitmodules_config_oid(const struct object_id *commit_oid);
+void repo_read_benchmodules(struct repository *repo, int skip_if_read);
+void benchmodules_config_oid(const struct object_id *commit_oid);
 
 /**
  * Same as submodule_from_path but lookup by name.
@@ -79,12 +79,12 @@ const struct submodule *submodule_from_path(struct repository *r,
  */
 void submodule_free(struct repository *r);
 
-int print_config_from_gitmodules(struct repository *repo, const char *key);
-int config_set_in_gitmodules_file_gently(const char *key, const char *value);
+int print_config_from_benchmodules(struct repository *repo, const char *key);
+int config_set_in_benchmodules_file_gently(const char *key, const char *value);
 
 /*
  * Returns 0 if the name is syntactically acceptable as a submodule "name"
- * (e.g., that may be found in the subsection of a .gitmodules file) and -1
+ * (e.g., that may be found in the subsection of a .benchmodules file) and -1
  * otherwise.
  */
 int check_submodule_name(const char *name);
@@ -95,13 +95,13 @@ int check_submodule_url(const char *url);
 /*
  * Note: these helper functions exist solely to maintain backward
  * compatibility with 'fetch' and 'update_clone' storing configuration in
- * '.gitmodules'.
+ * '.benchmodules'.
  *
- * New helpers to retrieve arbitrary configuration from the '.gitmodules' file
+ * New helpers to retrieve arbitrary configuration from the '.benchmodules' file
  * should NOT be added.
  */
-void fetch_config_from_gitmodules(int *max_children, int *recurse_submodules);
-void update_clone_config_from_gitmodules(int *max_jobs);
+void fetch_config_from_benchmodules(int *max_children, int *recurse_submodules);
+void update_clone_config_from_benchmodules(int *max_jobs);
 
 /*
  * Submodule entry that contains relevant information about a
@@ -117,7 +117,7 @@ struct submodule_tree_entry {
 	struct repository *repo;
 	/*
 	 * A struct submodule containing the submodule config in the
-	 * tree's .gitmodules.
+	 * tree's .benchmodules.
 	 */
 	const struct submodule *submodule;
 };

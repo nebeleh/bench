@@ -1048,7 +1048,7 @@ int cmd_rev_parse(int argc,
 				cwd = xgetcwd();
 				len = strlen(cwd);
 				strbuf_reset(&buf);
-				strbuf_addf(&buf, "%s%s.git", cwd, len && cwd[len-1] != '/' ? "/" : "");
+				strbuf_addf(&buf, "%s%s.bench", cwd, len && cwd[len-1] != '/' ? "/" : "");
 				free(cwd);
 				print_path(buf.buf, prefix, wanted, DEFAULT_CANONICAL);
 				continue;

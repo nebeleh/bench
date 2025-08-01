@@ -38,19 +38,19 @@ static struct oid_array ref_tips_before_fetch;
 static struct oid_array ref_tips_after_fetch;
 
 /*
- * Check if the .gitmodules file is unmerged. Parsing of the .gitmodules file
+ * Check if the .benchmodules file is unmerged. Parsing of the .benchmodules file
  * will be disabled because we can't guess what might be configured in
- * .gitmodules unless the user resolves the conflict.
+ * .benchmodules unless the user resolves the conflict.
  */
-int is_gitmodules_unmerged(struct index_state *istate)
+int is_benchmodules_unmerged(struct index_state *istate)
 {
-	int pos = index_name_pos(istate, GITMODULES_FILE, strlen(GITMODULES_FILE));
-	if (pos < 0) { /* .gitmodules not found or isn't merged */
+	int pos = index_name_pos(istate, BENCHMODULES_FILE, strlen(BENCHMODULES_FILE));
+	if (pos < 0) { /* .benchmodules not found or isn't merged */
 		pos = -1 - pos;
-		if (istate->cache_nr > pos) {  /* there is a .gitmodules */
+		if (istate->cache_nr > pos) {  /* there is a .benchmodules */
 			const struct cache_entry *ce = istate->cache[pos];
-			if (ce_namelen(ce) == strlen(GITMODULES_FILE) &&
-			    !strcmp(ce->name, GITMODULES_FILE))
+			if (ce_namelen(ce) == strlen(BENCHMODULES_FILE) &&
+			    !strcmp(ce->name, BENCHMODULES_FILE))
 				return 1;
 		}
 	}
@@ -59,38 +59,38 @@ int is_gitmodules_unmerged(struct index_state *istate)
 }
 
 /*
- * Check if the .gitmodules file is safe to write.
+ * Check if the .benchmodules file is safe to write.
  *
- * Writing to the .gitmodules file requires that the file exists in the
- * working tree or, if it doesn't, that a brand new .gitmodules file is going
+ * Writing to the .benchmodules file requires that the file exists in the
+ * working tree or, if it doesn't, that a brand new .benchmodules file is going
  * to be created (i.e. it's neither in the index nor in the current branch).
  *
- * It is not safe to write to .gitmodules if it's not in the working tree but
+ * It is not safe to write to .benchmodules if it's not in the working tree but
  * it is in the index or in the current branch, because writing new values
  * (and staging them) would blindly overwrite ALL the old content.
  */
-int is_writing_gitmodules_ok(void)
+int is_writing_benchmodules_ok(void)
 {
 	struct object_id oid;
-	return file_exists(GITMODULES_FILE) ||
-		(repo_get_oid(the_repository, GITMODULES_INDEX, &oid) < 0 && repo_get_oid(the_repository, GITMODULES_HEAD, &oid) < 0);
+	return file_exists(BENCHMODULES_FILE) ||
+		(repo_get_oid(the_repository, BENCHMODULES_INDEX, &oid) < 0 && repo_get_oid(the_repository, BENCHMODULES_HEAD, &oid) < 0);
 }
 
 /*
- * Check if the .gitmodules file has unstaged modifications.  This must be
- * checked before allowing modifications to the .gitmodules file with the
+ * Check if the .benchmodules file has unstaged modifications.  This must be
+ * checked before allowing modifications to the .benchmodules file with the
  * intention to stage them later, because when continuing we would stage the
  * modifications the user didn't stage herself too. That might change in a
  * future version when we learn to stage the changes we do ourselves without
  * staging any previous modifications.
  */
-int is_staging_gitmodules_ok(struct index_state *istate)
+int is_staging_benchmodules_ok(struct index_state *istate)
 {
-	int pos = index_name_pos(istate, GITMODULES_FILE, strlen(GITMODULES_FILE));
+	int pos = index_name_pos(istate, BENCHMODULES_FILE, strlen(BENCHMODULES_FILE));
 
 	if ((pos >= 0) && (pos < istate->cache_nr)) {
 		struct stat st;
-		if (lstat(GITMODULES_FILE, &st) == 0 &&
+		if (lstat(BENCHMODULES_FILE, &st) == 0 &&
 		    ie_modified(istate, istate->cache[pos], &st, 0) & DATA_CHANGED)
 			return 0;
 	}
@@ -108,60 +108,60 @@ static int for_each_remote_ref_submodule(const char *submodule,
 
 /*
  * Try to update the "path" entry in the "submodule.<name>" section of the
- * .gitmodules file. Return 0 only if a .gitmodules file was found, a section
+ * .benchmodules file. Return 0 only if a .benchmodules file was found, a section
  * with the correct path=<oldpath> setting was found and we could update it.
  */
-int update_path_in_gitmodules(const char *oldpath, const char *newpath)
+int update_path_in_benchmodules(const char *oldpath, const char *newpath)
 {
 	struct strbuf entry = STRBUF_INIT;
 	const struct submodule *submodule;
 	int ret;
 
-	if (!file_exists(GITMODULES_FILE)) /* Do nothing without .gitmodules */
+	if (!file_exists(BENCHMODULES_FILE)) /* Do nothing without .benchmodules */
 		return -1;
 
-	if (is_gitmodules_unmerged(the_repository->index))
-		die(_("Cannot change unmerged .gitmodules, resolve merge conflicts first"));
+	if (is_benchmodules_unmerged(the_repository->index))
+		die(_("Cannot change unmerged .benchmodules, resolve merge conflicts first"));
 
 	submodule = submodule_from_path(the_repository, null_oid(the_hash_algo), oldpath);
 	if (!submodule || !submodule->name) {
-		warning(_("Could not find section in .gitmodules where path=%s"), oldpath);
+		warning(_("Could not find section in .benchmodules where path=%s"), oldpath);
 		return -1;
 	}
 	strbuf_addstr(&entry, "submodule.");
 	strbuf_addstr(&entry, submodule->name);
 	strbuf_addstr(&entry, ".path");
-	ret = config_set_in_gitmodules_file_gently(entry.buf, newpath);
+	ret = config_set_in_benchmodules_file_gently(entry.buf, newpath);
 	strbuf_release(&entry);
 	return ret;
 }
 
 /*
- * Try to remove the "submodule.<name>" section from .gitmodules where the given
- * path is configured. Return 0 only if a .gitmodules file was found, a section
+ * Try to remove the "submodule.<name>" section from .benchmodules where the given
+ * path is configured. Return 0 only if a .benchmodules file was found, a section
  * with the correct path=<path> setting was found and we could remove it.
  */
-int remove_path_from_gitmodules(const char *path)
+int remove_path_from_benchmodules(const char *path)
 {
 	struct strbuf sect = STRBUF_INIT;
 	const struct submodule *submodule;
 
-	if (!file_exists(GITMODULES_FILE)) /* Do nothing without .gitmodules */
+	if (!file_exists(BENCHMODULES_FILE)) /* Do nothing without .benchmodules */
 		return -1;
 
-	if (is_gitmodules_unmerged(the_repository->index))
-		die(_("Cannot change unmerged .gitmodules, resolve merge conflicts first"));
+	if (is_benchmodules_unmerged(the_repository->index))
+		die(_("Cannot change unmerged .benchmodules, resolve merge conflicts first"));
 
 	submodule = submodule_from_path(the_repository, null_oid(the_hash_algo), path);
 	if (!submodule || !submodule->name) {
-		warning(_("Could not find section in .gitmodules where path=%s"), path);
+		warning(_("Could not find section in .benchmodules where path=%s"), path);
 		return -1;
 	}
 	strbuf_addstr(&sect, "submodule.");
 	strbuf_addstr(&sect, submodule->name);
-	if (repo_config_rename_section_in_file(the_repository, GITMODULES_FILE, sect.buf, NULL) < 0) {
+	if (repo_config_rename_section_in_file(the_repository, BENCHMODULES_FILE, sect.buf, NULL) < 0) {
 		/* Maybe the user already did that, don't error out here */
-		warning(_("Could not remove .gitmodules entry for %s"), path);
+		warning(_("Could not remove .benchmodules entry for %s"), path);
 		strbuf_release(&sect);
 		return -1;
 	}
@@ -169,10 +169,10 @@ int remove_path_from_gitmodules(const char *path)
 	return 0;
 }
 
-void stage_updated_gitmodules(struct index_state *istate)
+void stage_updated_benchmodules(struct index_state *istate)
 {
-	if (add_file_to_index(istate, GITMODULES_FILE, 0))
-		die(_("staging updated .gitmodules failed"));
+	if (add_file_to_index(istate, BENCHMODULES_FILE, 0))
+		die(_("staging updated .benchmodules failed"));
 }
 
 void set_diffopt_flags_from_submodule_config(struct diff_options *diffopt,
@@ -192,7 +192,7 @@ void set_diffopt_flags_from_submodule_config(struct diff_options *diffopt,
 
 		if (ignore)
 			handle_ignore_submodules_arg(diffopt, ignore);
-		else if (is_gitmodules_unmerged(the_repository->index))
+		else if (is_benchmodules_unmerged(the_repository->index))
 			diffopt->flags.ignore_submodules = 1;
 	}
 }
@@ -785,7 +785,7 @@ static const char *default_name_or_path(const char *path_or_name)
  * member of the changed submodule name string_list_item.
  *
  * (super_oid, path) allows the submodule config to be read from _some_
- * .gitmodules file. We store this information the first time we find a
+ * .benchmodules file. We store this information the first time we find a
  * superproject commit that points to the submodule, but this is
  * arbitrary - we can choose any (super_oid, path) that matches the
  * submodule's name.
@@ -798,10 +798,10 @@ static const char *default_name_or_path(const char *path_or_name)
  *   submodule name instead of treeish_name and path. This should be easy
  *   because repo_submodule_init() internally uses the submodule's name.
  *
- * - Replace most instances of 'struct submodule' (which is the .gitmodules
+ * - Replace most instances of 'struct submodule' (which is the .benchmodules
  *   config) with just the submodule name. This is OK because we expect
  *   submodule settings to be stored in .git/config (via "git submodule init"),
- *   not .gitmodules. This also lets us delete get_non_gitmodules_submodule(),
+ *   not .benchmodules. This also lets us delete get_non_benchmodules_submodule(),
  *   which constructs a bogus 'struct submodule' for the sake of giving a
  *   placeholder name to a gitlink.
  */
@@ -1460,11 +1460,11 @@ struct fetch_task {
 };
 
 /**
- * When a submodule is not defined in .gitmodules, we cannot access it
+ * When a submodule is not defined in .benchmodules, we cannot access it
  * via the regular submodule-config. Create a fake submodule, which we can
  * work on.
  */
-static const struct submodule *get_non_gitmodules_submodule(const char *path)
+static const struct submodule *get_non_benchmodules_submodule(const char *path)
 {
 	struct submodule *ret;
 	const char *name = default_name_or_path(path);
@@ -1523,11 +1523,11 @@ static struct fetch_task *fetch_task_create(struct submodule_parallel_fetch *spf
 
 	if (!task->sub) {
 		/*
-		 * No entry in .gitmodules? Technically not a submodule,
+		 * No entry in .benchmodules? Technically not a submodule,
 		 * but historically we supported repositories that happen to be
 		 * in-place where a gitlink is. Keep supporting them.
 		 */
-		task->sub = get_non_gitmodules_submodule(path);
+		task->sub = get_non_benchmodules_submodule(path);
 		if (!task->sub)
 			goto cleanup;
 
@@ -2596,11 +2596,11 @@ void submodule_name_to_gitdir(struct strbuf *buf, struct repository *r,
 	 *
 	 * There are several solutions, including encoding the path in
 	 * some way, introducing a submodule.<name>.gitdir config in
-	 * .git/config (not .gitmodules) that allows overriding what the
+	 * .bench/config (not .benchmodules) that allows overriding what the
 	 * gitdir of a submodule would be (and teach Git, upon noticing
 	 * a clash, to automatically determine a non-clashing name and
 	 * to write such a config), or introducing a
-	 * submodule.<name>.gitdir config in .gitmodules that repo
+	 * submodule.<name>.gitdir config in .benchmodules that repo
 	 * administrators can explicitly set. Nothing has been decided,
 	 * so for now, just append the name at the end of the path.
 	 */

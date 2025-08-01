@@ -3,13 +3,13 @@
 # Copyright (C) 2018  Antonio Ospite <ao2@ao2.it>
 #
 
-test_description='Test reading/writing .gitmodules when not in the working tree
+test_description='Test reading/writing .benchmodules when not in the working tree
 
-This test verifies that, when .gitmodules is in the current branch but is not
+This test verifies that, when .benchmodules is in the current branch but is not
 in the working tree reading from it still works but writing to it does not.
 
 The test setup uses a sparse checkout, however the same scenario can be set up
-also by committing .gitmodules and then just removing it from the filesystem.
+also by committing .benchmodules and then just removing it from the filesystem.
 '
 
 GIT_TEST_FATAL_REGISTER_SUBMODULE_ODB=1

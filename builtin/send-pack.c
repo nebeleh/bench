@@ -165,7 +165,7 @@ int cmd_send_pack(int argc,
 	int helper_status = 0;
 	int send_all = 0;
 	int verbose = 0;
-	const char *receivepack = "git-receive-pack";
+	const char *receivepack = "bench-receive-pack";
 	unsigned dry_run = 0;
 	unsigned send_mirror = 0;
 	unsigned force_update = 0;
@@ -272,7 +272,7 @@ int cmd_send_pack(int argc,
 		fd[0] = 0;
 		fd[1] = 1;
 	} else {
-		conn = git_connect(fd, dest, "git-receive-pack", receivepack,
+		conn = git_connect(fd, dest, "bench-receive-pack", receivepack,
 			args.verbose ? CONNECT_VERBOSE : 0);
 	}
 

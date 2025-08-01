@@ -497,7 +497,7 @@ static struct discovery *discover_refs(const char *service, int for_push)
 	 * fetch, ls-remote, etc), then fallback to v0 since we don't know how
 	 * to do anything else (like push or remote archive) via v2.
 	 */
-	if (version == protocol_v2 && strcmp("git-upload-pack", service))
+	if (version == protocol_v2 && strcmp("bench-upload-pack", service))
 		version = protocol_v0;
 
 	/* Add the extra Git-Protocol header */
@@ -570,9 +570,9 @@ static struct ref *get_refs(int for_push)
 	struct discovery *heads;
 
 	if (for_push)
-		heads = discover_refs("git-receive-pack", for_push);
+		heads = discover_refs("bench-receive-pack", for_push);
 	else
-		heads = discover_refs("git-upload-pack", for_push);
+		heads = discover_refs("bench-upload-pack", for_push);
 
 	return heads->refs;
 }
@@ -1239,7 +1239,7 @@ static int fetch_git(struct discovery *heads,
 	packet_buf_flush(&preamble);
 
 	memset(&rpc, 0, sizeof(rpc));
-	rpc.service_name = "git-upload-pack";
+	rpc.service_name = "bench-upload-pack";
 	rpc.gzip_request = 1;
 
 	err = rpc_service(&rpc, heads, args.v, &preamble, &rpc_result);
@@ -1253,7 +1253,7 @@ static int fetch_git(struct discovery *heads,
 
 static int fetch(int nr_heads, struct ref **to_fetch)
 {
-	struct discovery *d = discover_refs("git-upload-pack", 0);
+	struct discovery *d = discover_refs("bench-upload-pack", 0);
 	if (d->proto_git)
 		return fetch_git(d, nr_heads, to_fetch);
 	else
@@ -1401,7 +1401,7 @@ static int push_git(struct discovery *heads, int nr_spec, const char **specs)
 	packet_buf_flush(&preamble);
 
 	memset(&rpc, 0, sizeof(rpc));
-	rpc.service_name = "git-receive-pack";
+	rpc.service_name = "bench-receive-pack";
 
 	err = rpc_service(&rpc, heads, args.v, &preamble, &rpc_result);
 	if (rpc_result.len)
@@ -1414,7 +1414,7 @@ static int push_git(struct discovery *heads, int nr_spec, const char **specs)
 
 static int push(int nr_spec, const char **specs)
 {
-	struct discovery *heads = discover_refs("git-receive-pack", 1);
+	struct discovery *heads = discover_refs("bench-receive-pack", 1);
 	int ret;
 
 	if (heads->proto_git)
@@ -1470,10 +1470,10 @@ static int stateless_connect(const char *service_name)
 	 * complete their request.
 	 *
 	 * The "git-upload-archive" service is a read-only operation. Fallback
-	 * to use "git-upload-pack" service to discover protocol version.
+	 * to use "bench-upload-pack" service to discover protocol version.
 	 */
 	if (!strcmp(service_name, "git-upload-archive"))
-		discover = discover_refs("git-upload-pack", 0);
+		discover = discover_refs("bench-upload-pack", 0);
 	else
 		discover = discover_refs(service_name, 0);
 	if (discover->version != protocol_v2) {

@@ -1612,16 +1612,29 @@ static inline int is_ntfs_dot_str(const char *name, const char *dotgit_name,
 				   dotgit_ntfs_shortname_prefix);
 }
 
-int is_ntfs_dotgitmodules(const char *name)
+/* NOTE: The NTFS 8.3 shortname hash "be7d4a" for "benchmodules" was generated
+ * using an approximation algorithm. The exact algorithm used by Git to generate
+ * these security hashes (like "gi7eba" for "gitmodules") needs to be verified.
+ * This value should be recalculated using the correct algorithm.
+ */
+int is_ntfs_dotbenchmodules(const char *name)
 {
-	return is_ntfs_dot_str(name, "gitmodules", "gi7eba");
+	return is_ntfs_dot_str(name, "benchmodules", "be7d4a");
 }
 
+/* NOTE: The NTFS 8.3 shortname hash "be362c" for "benchignore" was calculated
+ * in a previous commit. The exact algorithm used by Git to generate these
+ * security hashes needs to be verified and this value may need to be recalculated.
+ */
 int is_ntfs_dotbenchignore(const char *name)
 {
 	return is_ntfs_dot_str(name, "benchignore", "be362c");
 }
 
+/* NOTE: The NTFS 8.3 shortname hash "be19ae" for "benchattributes" was calculated
+ * in a previous commit. The exact algorithm used by Git to generate these
+ * security hashes needs to be verified and this value may need to be recalculated.
+ */
 int is_ntfs_dotbenchattributes(const char *name)
 {
 	return is_ntfs_dot_str(name, "benchattributes", "be19ae");

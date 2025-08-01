@@ -73,7 +73,7 @@ int cmd_fetch_pack(int argc,
 
 	memset(&args, 0, sizeof(args));
 	list_objects_filter_init(&args.filter_options);
-	args.uploadpack = "git-upload-pack";
+	args.uploadpack = "bench-upload-pack";
 
 	show_usage_if_asked(argc, argv, fetch_pack_usage);
 
@@ -223,7 +223,7 @@ int cmd_fetch_pack(int argc,
 		int flags = args.verbose ? CONNECT_VERBOSE : 0;
 		if (args.diag_url)
 			flags |= CONNECT_DIAG_URL;
-		conn = git_connect(fd, dest, "git-upload-pack",
+		conn = git_connect(fd, dest, "bench-upload-pack",
 				   args.uploadpack, flags);
 		if (!conn)
 			return args.diag_url ? 0 : 1;

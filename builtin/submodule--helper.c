@@ -299,7 +299,7 @@ static void runcommand_in_submodule_cb(const struct cache_entry *list_item,
 	sub = submodule_from_path(the_repository, null_oid(the_hash_algo), path);
 
 	if (!sub)
-		die(_("No url found for submodule path '%s' in .gitmodules"),
+		die(_("No url found for submodule path '%s' in .benchmodules"),
 			displaypath);
 
 	if (!is_submodule_populated_gently(path, NULL))
@@ -447,7 +447,7 @@ static void init_submodule(const char *path, const char *prefix,
 	sub = submodule_from_path(the_repository, null_oid(the_hash_algo), path);
 
 	if (!sub)
-		die(_("No url found for submodule path '%s' in .gitmodules"),
+		die(_("No url found for submodule path '%s' in .benchmodules"),
 			displaypath);
 
 	/*
@@ -465,12 +465,12 @@ static void init_submodule(const char *path, const char *prefix,
 	/*
 	 * Copy url setting when it is not set yet.
 	 * To look up the url in .git/config, we must not fall back to
-	 * .gitmodules, so look it up directly.
+	 * .benchmodules, so look it up directly.
 	 */
 	strbuf_addf(&sb, "submodule.%s.url", sub->name);
 	if (git_config_get_string(sb.buf, &url)) {
 		if (!sub->url)
-			die(_("No url found for submodule path '%s' in .gitmodules"),
+			die(_("No url found for submodule path '%s' in .benchmodules"),
 				displaypath);
 
 		url = xstrdup(sub->url);
@@ -622,7 +622,7 @@ static void status_submodule(const char *path, const struct object_id *ce_oid,
 		die(NULL);
 
 	if (!submodule_from_path(the_repository, null_oid(the_hash_algo), path))
-		die(_("no submodule mapping found in .gitmodules for path '%s'"),
+		die(_("no submodule mapping found in .benchmodules for path '%s'"),
 		      path);
 
 	displaypath = get_submodule_displaypath(path, prefix, super_prefix);
@@ -1923,7 +1923,7 @@ static int determine_submodule_update_strategy(struct repository *r,
 		}
 	} else if (sub->update_strategy.type != SM_UPDATE_UNSPECIFIED) {
 		if (sub->update_strategy.type == SM_UPDATE_COMMAND)
-			BUG("how did we read update = !command from .gitmodules?");
+			BUG("how did we read update = !command from .benchmodules?");
 		out->type = sub->update_strategy.type;
 		out->command = sub->update_strategy.command;
 	} else
@@ -2829,7 +2829,7 @@ static int module_update(int argc, const char **argv, const char *prefix,
 		NULL
 	};
 
-	update_clone_config_from_gitmodules(&opt.max_jobs);
+	update_clone_config_from_benchmodules(&opt.max_jobs);
 	git_config(git_update_clone_config, &opt.max_jobs);
 
 	argc = parse_options(argc, argv, prefix, module_update_options,
@@ -3039,14 +3039,14 @@ static int module_set_url(int argc, const char **argv, const char *prefix,
 	sub = submodule_from_path(the_repository, null_oid(the_hash_algo), path);
 
 	if (!sub)
-		die(_("no submodule mapping found in .gitmodules for path '%s'"),
+		die(_("no submodule mapping found in .benchmodules for path '%s'"),
 		    path);
 
 	config_name = xstrfmt("submodule.%s.url", sub->name);
-	ret = config_set_in_gitmodules_file_gently(config_name, newurl);
+	ret = config_set_in_benchmodules_file_gently(config_name, newurl);
 
 	if (!ret) {
-		repo_read_gitmodules(the_repository, 0);
+		repo_read_benchmodules(the_repository, 0);
 		sync_submodule(sub->path, prefix, NULL, quiet ? OPT_QUIET : 0);
 	}
 
@@ -3095,11 +3095,11 @@ static int module_set_branch(int argc, const char **argv, const char *prefix,
 	sub = submodule_from_path(the_repository, null_oid(the_hash_algo), path);
 
 	if (!sub)
-		die(_("no submodule mapping found in .gitmodules for path '%s'"),
+		die(_("no submodule mapping found in .benchmodules for path '%s'"),
 		    path);
 
 	config_name = xstrfmt("submodule.%s.branch", sub->name);
-	ret = config_set_in_gitmodules_file_gently(config_name, opt_branch);
+	ret = config_set_in_benchmodules_file_gently(config_name, opt_branch);
 
 	free(config_name);
 	return !!ret;
@@ -3287,16 +3287,16 @@ cleanup:
 	return ret;
 }
 
-static int config_submodule_in_gitmodules(const char *name, const char *var, const char *value)
+static int config_submodule_in_benchmodules(const char *name, const char *var, const char *value)
 {
 	char *key;
 	int ret;
 
-	if (!is_writing_gitmodules_ok())
-		die(_("please make sure that the .gitmodules file is in the working tree"));
+	if (!is_writing_benchmodules_ok())
+		die(_("please make sure that the .benchmodules file is in the working tree"));
 
 	key = xstrfmt("submodule.%s.%s", name, var);
-	ret = config_set_in_gitmodules_file_gently(key, value);
+	ret = config_set_in_benchmodules_file_gently(key, value);
 	free(key);
 
 	return ret;
@@ -3306,7 +3306,7 @@ static void configure_added_submodule(struct add_data *add_data)
 {
 	char *key;
 	struct child_process add_submod = CHILD_PROCESS_INIT;
-	struct child_process add_gitmodules = CHILD_PROCESS_INIT;
+	struct child_process add_benchmodules = CHILD_PROCESS_INIT;
 
 	key = xstrfmt("submodule.%s.url", add_data->sm_name);
 	git_config_set_gently(key, add_data->realrepo);
@@ -3322,21 +3322,21 @@ static void configure_added_submodule(struct add_data *add_data)
 	if (run_command(&add_submod))
 		die(_("Failed to add submodule '%s'"), add_data->sm_path);
 
-	if (config_submodule_in_gitmodules(add_data->sm_name, "path", add_data->sm_path) ||
-	    config_submodule_in_gitmodules(add_data->sm_name, "url", add_data->repo))
+	if (config_submodule_in_benchmodules(add_data->sm_name, "path", add_data->sm_path) ||
+	    config_submodule_in_benchmodules(add_data->sm_name, "url", add_data->repo))
 		die(_("Failed to register submodule '%s'"), add_data->sm_path);
 
 	if (add_data->branch) {
-		if (config_submodule_in_gitmodules(add_data->sm_name,
+		if (config_submodule_in_benchmodules(add_data->sm_name,
 						   "branch", add_data->branch))
 			die(_("Failed to register submodule '%s'"), add_data->sm_path);
 	}
 
-	add_gitmodules.git_cmd = 1;
-	strvec_pushl(&add_gitmodules.args,
-		     "add", "--force", "--", ".gitmodules", NULL);
+	add_benchmodules.git_cmd = 1;
+	strvec_pushl(&add_benchmodules.args,
+		     "add", "--force", "--", ".benchmodules", NULL);
 
-	if (run_command(&add_gitmodules))
+	if (run_command(&add_benchmodules))
 		die(_("Failed to register submodule '%s'"), add_data->sm_path);
 
 	/*
@@ -3450,8 +3450,8 @@ static int module_add(int argc, const char **argv, const char *prefix,
 
 	argc = parse_options(argc, argv, prefix, options, usage, 0);
 
-	if (!is_writing_gitmodules_ok())
-		die(_("please make sure that the .gitmodules file is in the working tree"));
+	if (!is_writing_benchmodules_ok())
+		die(_("please make sure that the .benchmodules file is in the working tree"));
 
 	if (prefix && *prefix &&
 	    add_data.reference_path && !is_absolute_path(add_data.reference_path))

@@ -324,8 +324,8 @@ int cmd_rm(int argc,
 		list.entry[list.nr].name = xstrdup(ce->name);
 		list.entry[list.nr].is_submodule = S_ISGITLINK(ce->ce_mode);
 		if (list.entry[list.nr++].is_submodule &&
-		    !is_staging_gitmodules_ok(the_repository->index))
-			die(_("please stage your changes to .gitmodules or stash them to proceed"));
+		    !is_staging_benchmodules_ok(the_repository->index))
+			die(_("please stage your changes to .benchmodules or stash them to proceed"));
 	}
 
 	if (pathspec.nr) {
@@ -422,7 +422,7 @@ int cmd_rm(int argc,
 					die(_("could not remove '%s'"), path);
 
 				removed = 1;
-				if (!remove_path_from_gitmodules(path))
+				if (!remove_path_from_benchmodules(path))
 					gitmodules_modified = 1;
 				continue;
 			}
@@ -435,7 +435,7 @@ int cmd_rm(int argc,
 		}
 		strbuf_release(&buf);
 		if (gitmodules_modified)
-			stage_updated_gitmodules(the_repository->index);
+			stage_updated_benchmodules(the_repository->index);
 	}
 
 	if (write_locked_index(the_repository->index, &lock_file,

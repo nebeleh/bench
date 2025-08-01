@@ -4050,7 +4050,7 @@ static void connect_wt_gitdir_in_nested(const char *sub_worktree,
 
 		sub = submodule_from_path(&subrepo, null_oid(the_hash_algo), ce->name);
 		if (!sub || !is_submodule_active(&subrepo, ce->name))
-			/* .gitmodules broken or inactive sub */
+			/* .benchmodules broken or inactive sub */
 			continue;
 
 		strbuf_reset(&sub_wt);

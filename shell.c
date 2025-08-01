@@ -152,9 +152,9 @@ static struct commands {
 	const char *name;
 	int (*exec)(const char *me, char *arg);
 } cmd_list[] = {
-	{ "git-receive-pack", do_generic_cmd },
-	{ "git-upload-pack", do_generic_cmd },
-	{ "git-upload-archive", do_generic_cmd },
+	{ "bench-receive-pack", do_generic_cmd },
+	{ "bench-upload-pack", do_generic_cmd },
+	{ "bench-upload-archive", do_generic_cmd },
 	{ NULL },
 };
 

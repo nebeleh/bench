@@ -1438,7 +1438,7 @@ struct child_process *git_connect(int fd[2], const char *url,
 	 * fetch, ls-remote, etc), then fallback to v0 since we don't know how
 	 * to do anything else (like push or remote archive) via v2.
 	 */
-	if (version == protocol_v2 && strcmp("git-upload-pack", name))
+	if (version == protocol_v2 && strcmp("bench-upload-pack", name))
 		version = protocol_v0;
 
 	/* Without this we cannot rely on waitpid() to tell

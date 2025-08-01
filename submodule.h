@@ -45,12 +45,12 @@ int parse_submodule_update_strategy(const char *value,
 				    struct submodule_update_strategy *dst);
 void submodule_update_strategy_release(struct submodule_update_strategy *strategy);
 
-int is_gitmodules_unmerged(struct index_state *istate);
-int is_writing_gitmodules_ok(void);
-int is_staging_gitmodules_ok(struct index_state *istate);
-int update_path_in_gitmodules(const char *oldpath, const char *newpath);
-int remove_path_from_gitmodules(const char *path);
-void stage_updated_gitmodules(struct index_state *istate);
+int is_benchmodules_unmerged(struct index_state *istate);
+int is_writing_benchmodules_ok(void);
+int is_staging_benchmodules_ok(struct index_state *istate);
+int update_path_in_benchmodules(const char *oldpath, const char *newpath);
+int remove_path_from_benchmodules(const char *path);
+void stage_updated_benchmodules(struct index_state *istate);
 void set_diffopt_flags_from_submodule_config(struct diff_options *,
 					     const char *path);
 int git_default_submodule_config(const char *var, const char *value, void *cb);

@@ -59,7 +59,7 @@ int mbs_chrlen(const char **text, size_t *remainder_p, const char *encoding);
  * Likewise, the is_hfs_dotgitfoo() variants look for ".gitfoo".
  */
 int is_hfs_dotgit(const char *path);
-int is_hfs_dotgitmodules(const char *path);
+int is_hfs_dotbenchmodules(const char *path);
 int is_hfs_dotbenchignore(const char *path);
 int is_hfs_dotbenchattributes(const char *path);
 int is_hfs_dotmailmap(const char *path);

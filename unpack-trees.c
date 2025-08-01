@@ -341,19 +341,19 @@ static int check_submodule_move_head(const struct cache_entry *ce,
  * (2) before checking out entries to the working tree if the gitmodules file
  *     has been marked for update.  This situation is specified by 'state' != NULL.
  */
-static void load_gitmodules_file(struct index_state *index,
+static void load_benchmodules_file(struct index_state *index,
 				 struct checkout *state)
 {
-	int pos = index_name_pos(index, GITMODULES_FILE, strlen(GITMODULES_FILE));
+	int pos = index_name_pos(index, BENCHMODULES_FILE, strlen(BENCHMODULES_FILE));
 
 	if (pos >= 0) {
 		struct cache_entry *ce = index->cache[pos];
 		if (!state && ce->ce_flags & CE_WT_REMOVE) {
-			repo_read_gitmodules(the_repository, 0);
+			repo_read_benchmodules(the_repository, 0);
 		} else if (state && (ce->ce_flags & CE_UPDATE)) {
 			submodule_free(the_repository);
 			checkout_entry(ce, state, NULL, NULL);
-			repo_read_gitmodules(the_repository, 0);
+			repo_read_benchmodules(the_repository, 0);
 		}
 	}
 }
@@ -455,7 +455,7 @@ static int check_updates(struct unpack_trees_options *o,
 	git_attr_set_direction(GIT_ATTR_CHECKOUT);
 
 	if (should_update_submodules())
-		load_gitmodules_file(index, NULL);
+		load_benchmodules_file(index, NULL);
 
 	for (i = 0; i < index->cache_nr; i++) {
 		const struct cache_entry *ce = index->cache[i];
@@ -470,7 +470,7 @@ static int check_updates(struct unpack_trees_options *o,
 	remove_scheduled_dirs();
 
 	if (should_update_submodules())
-		load_gitmodules_file(index, &state);
+		load_benchmodules_file(index, &state);
 
 	if (repo_has_promisor_remote(the_repository))
 		/*

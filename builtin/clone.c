@@ -897,7 +897,7 @@ int cmd_clone(int argc,
 	struct string_list option_not = STRING_LIST_INIT_NODUP;
 	const char *real_git_dir = NULL;
 	const char *ref_format = NULL;
-	const char *option_upload_pack = "git-upload-pack";
+	const char *option_upload_pack = "bench-upload-pack";
 	int option_progress = -1;
 	int option_sparse_checkout = 0;
 	enum transport_family family = TRANSPORT_FAMILY_ALL;

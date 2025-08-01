@@ -662,15 +662,15 @@ static int fsck_tree(const struct object_id *tree_oid,
 		has_zero_pad |= *(char *)desc.buffer == '0';
 		has_large_name |= tree_entry_len(&desc.entry) > max_tree_entry_len;
 
-		if (is_hfs_dotgitmodules(name) || is_ntfs_dotgitmodules(name)) {
+		if (is_hfs_dotbenchmodules(name) || is_ntfs_dotbenchmodules(name)) {
 			if (!S_ISLNK(mode))
-				oidset_insert(&options->gitmodules_found,
+				oidset_insert(&options->benchmodules_found,
 					      entry_oid);
 			else
 				retval += report(options,
 						 tree_oid, OBJ_TREE,
-						 FSCK_MSG_GITMODULES_SYMLINK,
-						 ".gitmodules is a symbolic link");
+						 FSCK_MSG_BENCHMODULES_SYMLINK,
+						 ".benchmodules is a symbolic link");
 		}
 
 		if (is_hfs_dotbenchattributes(name) || is_ntfs_dotbenchattributes(name)) {
@@ -700,14 +700,14 @@ static int fsck_tree(const struct object_id *tree_oid,
 			while (backslash) {
 				backslash++;
 				has_dotgit |= is_ntfs_dotgit(backslash);
-				if (is_ntfs_dotgitmodules(backslash)) {
+				if (is_ntfs_dotbenchmodules(backslash)) {
 					if (!S_ISLNK(mode))
-						oidset_insert(&options->gitmodules_found,
+						oidset_insert(&options->benchmodules_found,
 							      entry_oid);
 					else
 						retval += report(options, tree_oid, OBJ_TREE,
-								 FSCK_MSG_GITMODULES_SYMLINK,
-								 ".gitmodules is a symbolic link");
+								 FSCK_MSG_BENCHMODULES_SYMLINK,
+								 ".benchmodules is a symbolic link");
 				}
 				backslash = strchr(backslash, '\\');
 			}
@@ -1084,17 +1084,17 @@ done:
 	return ret;
 }
 
-struct fsck_gitmodules_data {
+struct fsck_benchmodules_data {
 	const struct object_id *oid;
 	struct fsck_options *options;
 	int ret;
 };
 
-static int fsck_gitmodules_fn(const char *var, const char *value,
+static int fsck_benchmodules_fn(const char *var, const char *value,
 			      const struct config_context *ctx UNUSED,
 			      void *vdata)
 {
-	struct fsck_gitmodules_data *data = vdata;
+	struct fsck_benchmodules_data *data = vdata;
 	const char *subsection, *key;
 	size_t subsection_len;
 	char *name;
@@ -1107,27 +1107,27 @@ static int fsck_gitmodules_fn(const char *var, const char *value,
 	if (check_submodule_name(name) < 0)
 		data->ret |= report(data->options,
 				    data->oid, OBJ_BLOB,
-				    FSCK_MSG_GITMODULES_NAME,
+				    FSCK_MSG_BENCHMODULES_NAME,
 				    "disallowed submodule name: %s",
 				    name);
 	if (!strcmp(key, "url") && value &&
 	    check_submodule_url(value) < 0)
 		data->ret |= report(data->options,
 				    data->oid, OBJ_BLOB,
-				    FSCK_MSG_GITMODULES_URL,
+				    FSCK_MSG_BENCHMODULES_URL,
 				    "disallowed submodule url: %s",
 				    value);
 	if (!strcmp(key, "path") && value &&
 	    looks_like_command_line_option(value))
 		data->ret |= report(data->options,
 				    data->oid, OBJ_BLOB,
-				    FSCK_MSG_GITMODULES_PATH,
+				    FSCK_MSG_BENCHMODULES_PATH,
 				    "disallowed submodule path: %s",
 				    value);
 	if (!strcmp(key, "update") && value &&
 	    parse_submodule_update_type(value) == SM_UPDATE_COMMAND)
 		data->ret |= report(data->options, data->oid, OBJ_BLOB,
-				    FSCK_MSG_GITMODULES_UPDATE,
+				    FSCK_MSG_BENCHMODULES_UPDATE,
 				    "disallowed submodule update setting: %s",
 				    value);
 	free(name);
@@ -1143,11 +1143,11 @@ static int fsck_blob(const struct object_id *oid, const char *buf,
 	if (object_on_skiplist(options, oid))
 		return 0;
 
-	if (oidset_contains(&options->gitmodules_found, oid)) {
+	if (oidset_contains(&options->benchmodules_found, oid)) {
 		struct config_options config_opts = { 0 };
-		struct fsck_gitmodules_data data;
+		struct fsck_benchmodules_data data;
 
-		oidset_insert(&options->gitmodules_done, oid);
+		oidset_insert(&options->benchmodules_done, oid);
 
 		if (!buf) {
 			/*
@@ -1156,20 +1156,20 @@ static int fsck_blob(const struct object_id *oid, const char *buf,
 			 * that an error.
 			 */
 			return report(options, oid, OBJ_BLOB,
-					FSCK_MSG_GITMODULES_LARGE,
-					".gitmodules too large to parse");
+					FSCK_MSG_BENCHMODULES_LARGE,
+					".benchmodules too large to parse");
 		}
 
 		data.oid = oid;
 		data.options = options;
 		data.ret = 0;
 		config_opts.error_action = CONFIG_ERROR_SILENT;
-		if (git_config_from_mem(fsck_gitmodules_fn, CONFIG_ORIGIN_BLOB,
-					".gitmodules", buf, size, &data,
+		if (git_config_from_mem(fsck_benchmodules_fn, CONFIG_ORIGIN_BLOB,
+					".benchmodules", buf, size, &data,
 					CONFIG_SCOPE_UNKNOWN, &config_opts))
 			data.ret |= report(options, oid, OBJ_BLOB,
-					FSCK_MSG_GITMODULES_PARSE,
-					"could not parse gitmodules blob");
+					FSCK_MSG_BENCHMODULES_PARSE,
+					"could not parse benchmodules blob");
 		ret |= data.ret;
 	}
 
@@ -1321,9 +1321,9 @@ int fsck_finish(struct fsck_options *options)
 {
 	int ret = 0;
 
-	ret |= fsck_blobs(&options->gitmodules_found, &options->gitmodules_done,
-			  FSCK_MSG_GITMODULES_MISSING, FSCK_MSG_GITMODULES_BLOB,
-			  options, ".gitmodules");
+	ret |= fsck_blobs(&options->benchmodules_found, &options->benchmodules_done,
+			  FSCK_MSG_BENCHMODULES_MISSING, FSCK_MSG_BENCHMODULES_BLOB,
+			  options, ".benchmodules");
 	ret |= fsck_blobs(&options->gitattributes_found, &options->gitattributes_done,
 			  FSCK_MSG_GITATTRIBUTES_MISSING, FSCK_MSG_GITATTRIBUTES_BLOB,
 			  options, ".benchattributes");
@@ -1335,8 +1335,8 @@ void fsck_options_clear(struct fsck_options *options)
 {
 	free(options->msg_type);
 	oidset_clear(&options->skip_oids);
-	oidset_clear(&options->gitmodules_found);
-	oidset_clear(&options->gitmodules_done);
+	oidset_clear(&options->benchmodules_found);
+	oidset_clear(&options->benchmodules_done);
 	oidset_clear(&options->gitattributes_found);
 	oidset_clear(&options->gitattributes_done);
 	kh_clear_oid_map(options->object_names);
@@ -1375,13 +1375,13 @@ int git_fsck_config(const char *var, const char *value,
  * Custom error callbacks that are used in more than one place.
  */
 
-int fsck_objects_error_cb_print_missing_gitmodules(struct fsck_options *o,
+int fsck_objects_error_cb_print_missing_benchmodules(struct fsck_options *o,
 						   void *fsck_report,
 						   enum fsck_msg_type msg_type,
 						   enum fsck_msg_id msg_id,
 						   const char *message)
 {
-	if (msg_id == FSCK_MSG_GITMODULES_MISSING) {
+	if (msg_id == FSCK_MSG_BENCHMODULES_MISSING) {
 		struct fsck_object_report *report = fsck_report;
 		puts(oid_to_hex(report->oid));
 		return 0;

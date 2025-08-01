@@ -101,8 +101,8 @@ static const char *submodule_gitfile_path(const char *src, int first)
 
 	if (!S_ISGITLINK(the_repository->index->cache[first]->ce_mode))
 		die(_("Directory %s is in index and no submodule?"), src);
-	if (!is_staging_gitmodules_ok(the_repository->index))
-		die(_("Please stage your changes to .gitmodules or stash them to proceed"));
+	if (!is_staging_benchmodules_ok(the_repository->index))
+		die(_("Please stage your changes to .benchmodules or stash them to proceed"));
 
 	strbuf_addf(&submodule_dotgit, "%s/.bench", src);
 
@@ -550,7 +550,7 @@ remove_entry:
 			die_errno(_("renaming '%s' failed"), src);
 		}
 		if (submodule_gitfiles[i]) {
-			if (!update_path_in_gitmodules(src, dst))
+			if (!update_path_in_benchmodules(src, dst))
 				gitmodules_modified = 1;
 			if (submodule_gitfiles[i] != SUBMODULE_WITH_GITDIR)
 				connect_work_tree_and_git_dir(dst,
@@ -627,7 +627,7 @@ remove_entry:
 		advise_on_moving_dirty_path(&dirty_paths);
 
 	if (gitmodules_modified)
-		stage_updated_gitmodules(the_repository->index);
+		stage_updated_benchmodules(the_repository->index);
 
 	if (write_locked_index(the_repository->index, &lock_file,
 			       COMMIT_LOCK | SKIP_IF_UNCHANGED))
