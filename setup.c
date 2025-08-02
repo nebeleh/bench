@@ -687,6 +687,20 @@ static enum extension_result handle_extension(const char *var,
 	} else if (!strcmp(ext, "relativeworktrees")) {
 		data->relative_worktrees = git_config_bool(var, value);
 		return EXTENSION_OK;
+	} else if (!strcmp(ext, "bench")) {
+		/* Bench extension indicates this is a bench repository */
+		if (!value)
+			return config_error_nonbool(var);
+		return EXTENSION_OK;
+	} else if (!strcmp(ext, "benchmanifestversion")) {
+		/* Bench manifest version for chunking support */
+		int version;
+		if (!value)
+			return config_error_nonbool(var);
+		version = atoi(value);
+		if (version != 1)
+			return error(_("unsupported bench manifest version: %s"), value);
+		return EXTENSION_OK;
 	}
 	return EXTENSION_UNKNOWN;
 }
@@ -2319,7 +2333,8 @@ void create_reference_database(enum ref_storage_format ref_storage_format,
 static int create_default_files(const char *template_path,
 				const char *original_git_dir,
 				const struct repository_format *fmt,
-				int init_shared_repository)
+				int init_shared_repository,
+				unsigned int flags)
 {
 	struct stat st1;
 	struct strbuf path = STRBUF_INIT;
@@ -2362,6 +2377,14 @@ static int create_default_files(const char *template_path,
 	}
 
 	initialize_repository_version(fmt->hash_algo, fmt->ref_storage_format, reinit);
+
+	/* Add bench-specific extensions unless in git compatibility mode */
+	if (!(flags & INIT_DB_GIT_COMPAT)) {
+		git_config_set("extensions.bench", "true");
+		git_config_set("extensions.benchmanifestversion", "1");
+		/* Ensure repository format version is 1 when bench extensions are present */
+		git_config_set("core.repositoryformatversion", "1");
+	}
 
 	/* Check filemode trustability */
 	repo_git_path_replace(the_repository, &path, "config");
@@ -2615,7 +2638,7 @@ int init_db(const char *git_dir, const char *real_git_dir,
 	safe_create_dir(the_repository, git_dir, 0);
 
 	reinit = create_default_files(template_dir, original_git_dir,
-				      &repo_fmt, init_shared_repository);
+				      &repo_fmt, init_shared_repository, flags);
 
 	if (!(flags & INIT_DB_SKIP_REFDB))
 		create_reference_database(repo_fmt.ref_storage_format,

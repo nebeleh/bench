@@ -612,7 +612,7 @@ test_expect_success 'init rejects attempts to initialize with different hash' '
 
 test_expect_success DEFAULT_REPO_FORMAT 'extensions.refStorage is not allowed with repo version 0' '
 	test_when_finished "rm -rf refstorage" &&
-	bench init refstorage &&
+	bench init refstorage --git-compat &&
 	bench -C refstorage config extensions.refStorage files &&
 	test_must_fail bench -C refstorage rev-parse 2>err &&
 	grep "repo version is 0, but v1-only extension found" err
@@ -679,7 +679,8 @@ do
 		if test $format = files
 		then
 			test_must_fail bench -C refformat config extensions.refstorage &&
-			echo 0 >expect
+			# Bench always uses version 1 for extensions support
+			echo 1 >expect
 		else
 			bench -C refformat config extensions.refstorage &&
 			echo 1 >expect

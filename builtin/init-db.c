@@ -57,7 +57,7 @@ static int shared_callback(const struct option *opt, const char *arg, int unset)
 static const char *const init_db_usage[] = {
 	N_("git init [-q | --quiet] [--bare] [--template=<template-directory>]\n"
 	   "         [--separate-git-dir <git-dir>] [--object-format=<format>]\n"
-	   "         [--ref-format=<format>]\n"
+	   "         [--ref-format=<format>] [--git-compat]\n"
 	   "         [-b <branch-name> | --initial-branch=<branch-name>]\n"
 	   "         [--shared[=<permissions>]] [<directory>]"),
 	NULL
@@ -87,6 +87,7 @@ int cmd_init_db(int argc,
 	int hash_algo = GIT_HASH_UNKNOWN;
 	enum ref_storage_format ref_storage_format = REF_STORAGE_FORMAT_UNKNOWN;
 	int init_shared_repository = -1;
+	int git_compat_mode = 0;
 	const struct option init_db_options[] = {
 		OPT_STRING(0, "template", &template_dir, N_("template-directory"),
 				N_("directory from which templates will be used")),
@@ -110,6 +111,8 @@ int cmd_init_db(int argc,
 			   N_("specify the hash algorithm to use")),
 		OPT_STRING(0, "ref-format", &ref_format, N_("format"),
 			   N_("specify the reference format to use")),
+		OPT_BOOL(0, "git-compat", &git_compat_mode,
+			 N_("create a git-compatible repository without bench extensions")),
 		OPT_END()
 	};
 	int ret;
@@ -252,6 +255,8 @@ int cmd_init_db(int argc,
 	}
 
 	flags |= INIT_DB_EXIST_OK;
+	if (git_compat_mode)
+		flags |= INIT_DB_GIT_COMPAT;
 	ret = init_db(git_dir, real_git_dir, template_dir, hash_algo,
 		      ref_storage_format, initial_branch,
 		      init_shared_repository, flags);

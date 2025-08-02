@@ -194,6 +194,7 @@ const char *get_template_dir(const char *option_template);
 #define INIT_DB_QUIET      (1 << 0)
 #define INIT_DB_EXIST_OK   (1 << 1)
 #define INIT_DB_SKIP_REFDB (1 << 2)
+#define INIT_DB_GIT_COMPAT (1 << 3)
 
 int init_db(const char *git_dir, const char *real_git_dir,
 	    const char *template_dir, int hash_algo,
