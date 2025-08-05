@@ -11,6 +11,7 @@
 #include "tree.h"
 #include "commit.h"
 #include "tag.h"
+#include "manifest.h"
 #include "alloc.h"
 #include "commit-graph.h"
 
@@ -31,6 +32,7 @@ static const char *object_type_strings[] = {
 	"tree",		/* OBJ_TREE = 2 */
 	"blob",		/* OBJ_BLOB = 3 */
 	"tag",		/* OBJ_TAG = 4 */
+	"manifest",	/* OBJ_MANIFEST = 5 */
 };
 
 const char *type_name(unsigned int type)
@@ -202,6 +204,8 @@ struct object *lookup_object_by_type(struct repository *r,
 		return (struct object *)lookup_tag(r, oid);
 	case OBJ_BLOB:
 		return (struct object *)lookup_blob(r, oid);
+	case OBJ_MANIFEST:
+		return (struct object *)lookup_manifest(r, oid);
 	default:
 		BUG("unknown object type %d", type);
 	}
@@ -272,6 +276,13 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 			if (parse_tag_buffer(r, tag, buffer, size))
 			       return NULL;
 			obj = &tag->object;
+		}
+	} else if (type == OBJ_MANIFEST) {
+		struct manifest *manifest = lookup_manifest(r, oid);
+		if (manifest) {
+			if (parse_manifest_buffer(r, manifest, buffer, size) < 0)
+				return NULL;
+			obj = &manifest->object;
 		}
 	} else {
 		warning(_("object %s has unknown type id %d"), oid_to_hex(oid), type);
@@ -521,6 +532,7 @@ struct parsed_object_pool *parsed_object_pool_new(struct repository *repo)
 	o->tree_state = allocate_alloc_state();
 	o->commit_state = allocate_alloc_state();
 	o->tag_state = allocate_alloc_state();
+	o->manifest_state = allocate_alloc_state();
 	o->object_state = allocate_alloc_state();
 
 	o->is_shallow = -1;
@@ -564,6 +576,8 @@ void parsed_object_pool_clear(struct parsed_object_pool *o)
 			release_commit_memory(o, (struct commit*)obj);
 		else if (obj->type == OBJ_TAG)
 			release_tag_memory((struct tag*)obj);
+		else if (obj->type == OBJ_MANIFEST)
+			free_manifest((struct manifest*)obj);
 	}
 
 	FREE_AND_NULL(o->obj_hash);
@@ -577,12 +591,14 @@ void parsed_object_pool_clear(struct parsed_object_pool *o)
 	clear_alloc_state(o->tree_state);
 	clear_alloc_state(o->commit_state);
 	clear_alloc_state(o->tag_state);
+	clear_alloc_state(o->manifest_state);
 	clear_alloc_state(o->object_state);
 	stat_validity_clear(o->shallow_stat);
 	FREE_AND_NULL(o->blob_state);
 	FREE_AND_NULL(o->tree_state);
 	FREE_AND_NULL(o->commit_state);
 	FREE_AND_NULL(o->tag_state);
+	FREE_AND_NULL(o->manifest_state);
 	FREE_AND_NULL(o->object_state);
 	FREE_AND_NULL(o->shallow_stat);
 }

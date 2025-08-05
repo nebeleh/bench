@@ -16,6 +16,7 @@ struct parsed_object_pool {
 	struct alloc_state *tree_state;
 	struct alloc_state *commit_state;
 	struct alloc_state *tag_state;
+	struct alloc_state *manifest_state;
 	struct alloc_state *object_state;
 
 	/* parent substitutions from .git/info/grafts and .git/shallow */
@@ -101,7 +102,37 @@ enum object_type {
 	OBJ_TREE = 2,
 	OBJ_BLOB = 3,
 	OBJ_TAG = 4,
-	/* 5 for future expansion */
+	/*
+	 * BENCH MANIFEST OBJECT (slot 5)
+	 * 
+	 * We are using slot 5 for manifest objects, which was reserved by Git
+	 * for future expansion. This decision was made because:
+	 * 
+	 * 1. Manifests need to be stored in pack files, which use 3 bits for
+	 *    object types (limiting us to values 0-7)
+	 * 2. Using a value > 7 would require reimplementing pack file storage
+	 * 3. Manifests are a core part of bench's architecture
+	 * 
+	 * RISK: Future Git versions might claim slot 5 for their own use.
+	 * 
+	 * CONTINGENCY PLANS if Git claims slot 5:
+	 * 
+	 * Plan A: Version-aware object handling
+	 * - Detect if we're in a Git repository vs Bench repository
+	 * - Use slot 5 as manifest only in Bench repositories
+	 * - In Git compatibility mode, treat slot 5 as Git's new type
+	 * 
+	 * Plan B: Manifest as tagged blob
+	 * - Store manifests as regular blobs (type 3)
+	 * - Add a magic header to identify them as manifests
+	 * - Update tree parsing to recognize manifest blobs by content
+	 * 
+	 * Plan C: Extended object format
+	 * - Implement an extension mechanism for object types > 7
+	 * - Store extended type info in the object header
+	 * - Requires pack format v3 or custom pack format
+	 */
+	OBJ_MANIFEST = 5,
 	OBJ_OFS_DELTA = 6,
 	OBJ_REF_DELTA = 7,
 	OBJ_ANY,

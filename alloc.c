@@ -15,6 +15,7 @@
 #include "commit.h"
 #include "repository.h"
 #include "tag.h"
+#include "manifest.h"
 #include "alloc.h"
 
 #define BLOCKING 1024
@@ -25,6 +26,7 @@ union any_object {
 	struct tree tree;
 	struct commit commit;
 	struct tag tag;
+	struct manifest manifest;
 };
 
 struct alloc_state {
@@ -89,6 +91,13 @@ void *alloc_tag_node(struct repository *r)
 	struct tag *t = alloc_node(r->parsed_objects->tag_state, sizeof(struct tag));
 	t->object.type = OBJ_TAG;
 	return t;
+}
+
+void *alloc_manifest_node(struct repository *r)
+{
+	struct manifest *m = alloc_node(r->parsed_objects->manifest_state, sizeof(struct manifest));
+	m->object.type = OBJ_MANIFEST;
+	return m;
 }
 
 void *alloc_object_node(struct repository *r)

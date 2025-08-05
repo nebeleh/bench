@@ -1214,6 +1214,20 @@ int fsck_object(struct object *obj, void *data, unsigned long size,
 	return fsck_buffer(&obj->oid, obj->type, data, size, options);
 }
 
+static int fsck_manifest(const struct object_id *oid, const char *buf,
+			 unsigned long size, struct fsck_options *options)
+{
+	/*
+	 * For v1 manifests, we just need to verify basic structure.
+	 * In the future, we'll validate chunk OID references.
+	 */
+	if (object_on_skiplist(options, oid))
+		return 0;
+
+	/* For now, manifests are valid if they exist */
+	return 0;
+}
+
 int fsck_buffer(const struct object_id *oid, enum object_type type,
 		const void *data, unsigned long size,
 		struct fsck_options *options)
@@ -1226,6 +1240,8 @@ int fsck_buffer(const struct object_id *oid, enum object_type type,
 		return fsck_commit(oid, data, size, options);
 	if (type == OBJ_TAG)
 		return fsck_tag(oid, data, size, options);
+	if (type == OBJ_MANIFEST)
+		return fsck_manifest(oid, data, size, options);
 
 	return report(options, oid, type,
 		      FSCK_MSG_UNKNOWN_TYPE,
