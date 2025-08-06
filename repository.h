@@ -240,4 +240,10 @@ void repo_update_index_if_able(struct repository *, struct lock_file *);
  */
 int upgrade_repository_format(int target_version);
 
+/*
+ * Return 1 if the repository has bench extensions enabled, 0 otherwise.
+ * This checks for extensions.bench in the repository configuration.
+ */
+int repo_has_bench_extensions(struct repository *repo);
+
 #endif /* REPOSITORY_H */

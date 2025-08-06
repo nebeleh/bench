@@ -456,3 +456,16 @@ int repo_hold_locked_index(struct repository *repo,
 		BUG("the repo hasn't been setup");
 	return hold_lock_file_for_update(lf, repo->index_file, flags);
 }
+
+int repo_has_bench_extensions(struct repository *repo)
+{
+	int value = 0;
+	
+	if (!repo || !repo->gitdir)
+		return 0;
+	
+	/* Check if extensions.bench is set to true */
+	repo_config_get_bool(repo, "extensions.bench", &value);
+	
+	return value;
+}
