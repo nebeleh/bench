@@ -52,10 +52,3 @@ int manifest_entry(struct manifest_desc *desc)
 
 	return 1;
 }
-
-const struct object_id *manifest_entry_extract(struct manifest_desc *desc)
-{
-	if (is_null_oid(&desc->entry_oid))
-		return NULL;
-	return &desc->entry_oid;
-}

@@ -23,10 +23,4 @@ void init_manifest_desc(struct manifest_desc *desc, const void *buffer, unsigned
  */
 int manifest_entry(struct manifest_desc *desc);
 
-/*
- * Extract current OID without advancing.
- * Returns pointer to current position's OID, or NULL if invalid.
- */
-const struct object_id *manifest_entry_extract(struct manifest_desc *desc);
-
 #endif /* MANIFEST_WALK_H */

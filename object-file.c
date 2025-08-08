@@ -27,6 +27,7 @@
 #include "pack.h"
 #include "packfile.h"
 #include "path.h"
+#include "read-cache-ll.h"
 #include "setup.h"
 #include "streaming.h"
 
@@ -1287,7 +1288,8 @@ int index_path(struct index_state *istate, struct object_id *oid,
 	int fd;
 	struct strbuf sb = STRBUF_INIT;
 	int rc = 0;
-	int in_bench_mode = repo_has_bench_extensions(the_repository);
+	struct repository *repo = istate && istate->repo ? istate->repo : the_repository;
+	int in_bench_mode = repo_has_bench_extensions(repo);
 
 	switch (st->st_mode & S_IFMT) {
 	case S_IFREG:
@@ -1305,20 +1307,18 @@ int index_path(struct index_state *istate, struct object_id *oid,
 				return error(_("%s: failed to insert chunk into database"),
 					     path);
 			
-			/* Create manifest pointing to this chunk */
+			/* Create manifest pointing to this chunk.
+			 * The total size in the manifest is always the sum of uncompressed chunk sizes,
+			 * which equals st->st_size (the original file size).
+			 * Currently we create a single chunk containing the entire file.
+			 */
 			if (flags & INDEX_WRITE_OBJECT) {
-				struct strbuf manifest_buf = STRBUF_INIT;
-				strbuf_addf(&manifest_buf, "%s\n", oid_to_hex(&chunk_oid));
-				if (write_object_file(manifest_buf.buf, manifest_buf.len, OBJ_MANIFEST, oid))
+				if (write_manifest_object(repo, oid, st->st_size, 1, &chunk_oid) < 0)
 					rc = error(_("%s: failed to create manifest"), path);
-				strbuf_release(&manifest_buf);
 			} else {
 				/* Just hashing - create manifest hash without writing */
-				struct strbuf manifest_buf = STRBUF_INIT;
-				strbuf_addf(&manifest_buf, "%s\n", oid_to_hex(&chunk_oid));
-				hash_object_file(the_hash_algo, manifest_buf.buf, manifest_buf.len,
-						 OBJ_MANIFEST, oid);
-				strbuf_release(&manifest_buf);
+				if (hash_manifest_object(repo, oid, st->st_size, 1, &chunk_oid) < 0)
+					rc = error(_("%s: failed to hash manifest"), path);
 			}
 		} else {
 			/* Traditional git mode: create blob directly */
@@ -1339,22 +1339,16 @@ int index_path(struct index_state *istate, struct object_id *oid,
 				/* Just hashing */
 				hash_object_file(the_hash_algo, sb.buf, sb.len,
 						 OBJ_BLOB, &chunk_oid);
-				struct strbuf manifest_buf = STRBUF_INIT;
-				strbuf_addf(&manifest_buf, "%s\n", oid_to_hex(&chunk_oid));
-				hash_object_file(the_hash_algo, manifest_buf.buf, manifest_buf.len,
-						 OBJ_MANIFEST, oid);
-				strbuf_release(&manifest_buf);
+				if (hash_manifest_object(repo, oid, sb.len, 1, &chunk_oid) < 0)
+					rc = error(_("%s: failed to hash manifest"), path);
 			} else {
 				/* Write chunk */
 				if (write_object_file(sb.buf, sb.len, OBJ_BLOB, &chunk_oid))
 					rc = error(_("%s: failed to insert chunk into database"), path);
 				else {
 					/* Create manifest */
-					struct strbuf manifest_buf = STRBUF_INIT;
-					strbuf_addf(&manifest_buf, "%s\n", oid_to_hex(&chunk_oid));
-					if (write_object_file(manifest_buf.buf, manifest_buf.len, OBJ_MANIFEST, oid))
+					if (write_manifest_object(repo, oid, sb.len, 1, &chunk_oid) < 0)
 						rc = error(_("%s: failed to create manifest"), path);
-					strbuf_release(&manifest_buf);
 				}
 			}
 		} else {
@@ -1369,7 +1363,7 @@ int index_path(struct index_state *istate, struct object_id *oid,
 		break;
 	case S_IFDIR:
 		/* Submodules are handled the same way in both modes */
-		return repo_resolve_gitlink_ref(the_repository, path, "HEAD", oid);
+		return repo_resolve_gitlink_ref(repo, path, "HEAD", oid);
 	default:
 		return error(_("%s: unsupported file type"), path);
 	}
