@@ -3,6 +3,8 @@
 
 #include "object.h"
 
+struct oid_array;
+
 extern const char *manifest_type;
 
 struct manifest {
@@ -83,5 +85,17 @@ int close_manifest_stream(struct manifest_stream *stream);
  * Returns 0 on success, -1 on error.
  **/
 int stream_manifest_to_fd(struct repository *r, int fd, const struct object_id *manifest_oid);
+
+/**
+ * Get the total size and chunk OIDs from a manifest.
+ * This is used for reachability analysis and filtering.
+ * The chunk_oids array will be populated with the OIDs.
+ * Returns 0 on success, -1 on error.
+ * On success, *total_size contains the sum of all chunk sizes.
+ **/
+int get_manifest_chunk_oids(struct repository *r,
+                           const struct object_id *manifest_oid,
+                           unsigned long *total_size,
+                           struct oid_array *chunk_oids);
 
 #endif /* MANIFEST_H */

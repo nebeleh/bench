@@ -10,6 +10,7 @@
 #include "streaming.h"
 #include "manifest-walk.h"
 #include "write-or-die.h"
+#include "oid-array.h"
 
 const char *manifest_type = "manifest";
 
@@ -57,6 +58,68 @@ struct manifest_stream {
 	int at_end;
 };
 
+/* Internal structure for parsed manifest header */
+struct manifest_header {
+	int version;
+	unsigned long total_size;
+	size_t chunk_count;
+	const char *chunk_data;  /* Pointer to start of chunk OID data */
+	size_t chunk_data_len;   /* Length of chunk OID data */
+};
+
+/*
+ * Parse manifest header from buffer.
+ * This centralizes all manifest version parsing logic.
+ * Returns 0 on success, -1 on error.
+ */
+static int parse_manifest_header(const void *buffer, unsigned long size,
+                                 struct manifest_header *header)
+{
+	const char *p = buffer;
+	const char *end = (const char *)buffer + size;
+	
+	/* Parse version */
+	header->version = strtol(p, (char **)&p, 10);
+	if (p >= end || *p++ != '\n') {
+		error("manifest missing version number");
+		return -1;
+	}
+	
+	/* Version check: We currently only support version 1 */
+	if (header->version < 1) {
+		error("manifest has invalid version %d", header->version);
+		return -1;
+	}
+	if (header->version > 1) {
+		error("manifest version %d is newer than supported version 1", header->version);
+		return -1;
+	}
+	
+	/* Version 1 parsing - in future, use switch(version) for other versions */
+	if (header->version == 1) {
+		/* Parse total size */
+		header->total_size = strtoul(p, (char **)&p, 10);
+		if (p >= end || *p++ != '\n') {
+			error("manifest missing total size");
+			return -1;
+		}
+		
+		/* Parse chunk count */
+		header->chunk_count = strtoul(p, (char **)&p, 10);
+		if (p >= end || *p++ != '\n') {
+			error("manifest missing chunk count");
+			return -1;
+		}
+	}
+	/* Future versions would have their parsing logic here */
+	
+	/* Set pointer to chunk OID data */
+	header->chunk_data = p;
+	header->chunk_data_len = end - p;
+	
+	return 0;
+}
+
 struct manifest_stream *open_manifest_stream(struct repository *r,
                                              const struct object_id *manifest_oid,
                                              unsigned long *size)
@@ -65,10 +128,7 @@ struct manifest_stream *open_manifest_stream(struct repository *r,
 	enum object_type type;
 	unsigned long manifest_size;
 	void *manifest_buffer;
-	const char *p, *end;
-	int version;
-	unsigned long total_size;
-	size_t chunk_count;
+	struct manifest_header header;
 	
 	/* First verify this is actually a manifest */
 	type = oid_object_info(r, manifest_oid, &manifest_size);
@@ -80,68 +140,20 @@ struct manifest_stream *open_manifest_stream(struct repository *r,
 	if (!manifest_buffer)
 		return NULL;
 	
-	p = manifest_buffer;
-	end = (const char *)manifest_buffer + manifest_size;
-	
-	/*
-	 * Parse manifest header
-	 * Line 1: Version
-	 * Line 2: Total size  
-	 * Line 3: Chunk count
-	 */
-	
-	/* Parse version */
-	version = strtol(p, (char **)&p, 10);
-	if (*p++ != '\n') {
-		error("manifest missing version number");
+	/* Parse the manifest header using shared function */
+	if (parse_manifest_header(manifest_buffer, manifest_size, &header) < 0) {
 		free(manifest_buffer);
 		return NULL;
 	}
-	
-	/*
-	 * Version check: We currently only support version 1.
-	 * If we encounter a newer version, we must refuse to process it
-	 * to avoid data corruption or misinterpretation.
-	 */
-	if (version < 1) {
-		error("manifest has invalid version %d", version);
-		free(manifest_buffer);
-		return NULL;
-	}
-	if (version > 1) {
-		error("manifest version %d is newer than supported version 1", version);
-		free(manifest_buffer);
-		return NULL;
-	}
-	
-	/* Version 1 parsing - in future, use switch(version) for other versions */
-	if (version == 1) {
-		/* Parse total size */
-		total_size = strtoul(p, (char **)&p, 10);
-		if (*p++ != '\n') {
-			error("manifest missing total size");
-			free(manifest_buffer);
-			return NULL;
-		}
-		
-		/* Parse chunk count */
-		chunk_count = strtoul(p, (char **)&p, 10);
-		if (*p++ != '\n') {
-			error("manifest missing chunk count");
-			free(manifest_buffer);
-			return NULL;
-		}
-	}
-	/* Future versions would have their parsing logic here */
 	
 	stream = xcalloc(1, sizeof(*stream));
 	stream->repo = r;
 	stream->manifest_buffer = manifest_buffer;
 	stream->manifest_size = manifest_size;
-	stream->total_size = total_size;
+	stream->total_size = header.total_size;
 	
-	/* Initialize descriptor to point after header for chunk OID parsing */
-	init_manifest_desc(&stream->desc, p, end - p, r->hash_algo);
+	/* Initialize descriptor to point at chunk OID data */
+	init_manifest_desc(&stream->desc, header.chunk_data, header.chunk_data_len, r->hash_algo);
 	
 	if (size)
 		*size = stream->total_size;
@@ -370,5 +382,50 @@ int hash_manifest_object(struct repository *r, struct object_id *oid,
 	hash_object_file(r->hash_algo, buf.buf, buf.len, OBJ_MANIFEST, oid);
 	strbuf_release(&buf);
 	
+	return 0;
+}
+
+int get_manifest_chunk_oids(struct repository *r,
+                           const struct object_id *manifest_oid,
+                           unsigned long *total_size,
+                           struct oid_array *chunk_oids)
+{
+	enum object_type type;
+	unsigned long manifest_size;
+	void *manifest_buffer;
+	struct manifest_header header;
+	struct manifest_desc desc;
+	
+	/* Verify this is actually a manifest */
+	type = oid_object_info(r, manifest_oid, &manifest_size);
+	if (type != OBJ_MANIFEST)
+		return -1;
+	
+	/* Read the manifest content */
+	manifest_buffer = repo_read_object_file(r, manifest_oid, &type, &manifest_size);
+	if (!manifest_buffer)
+		return -1;
+	
+	/* Parse the manifest header using shared function */
+	if (parse_manifest_header(manifest_buffer, manifest_size, &header) < 0) {
+		free(manifest_buffer);
+		return -1;
+	}
+	
+	/* Collect chunk OIDs if requested */
+	if (chunk_oids) {
+		/* Initialize descriptor to iterate through chunk OIDs */
+		init_manifest_desc(&desc, header.chunk_data, header.chunk_data_len, r->hash_algo);
+		
+		oid_array_clear(chunk_oids);
+		while (manifest_entry(&desc)) {
+			oid_array_append(chunk_oids, &desc.entry_oid);
+		}
+	}
+	
+	if (total_size)
+		*total_size = header.total_size;
+	
+	free(manifest_buffer);
 	return 0;
 }

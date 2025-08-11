@@ -13,6 +13,9 @@
 #include "oidset.h"
 #include "object-name.h"
 #include "odb.h"
+#include "manifest.h"
+#include "repository.h"
+#include "oid-array.h"
 
 /* Remember to update object flag allocation in object.h */
 /*
@@ -108,6 +111,15 @@ static enum list_objects_filter_result filter_blobs_none(
 		if (omits)
 			oidset_insert(omits, &obj->oid);
 		return LOFR_MARK_SEEN; /* but not LOFR_DO_SHOW (hard omit) */
+
+	case LOFS_MANIFEST:
+		assert(obj->type == OBJ_MANIFEST);
+		assert((obj->flags & SEEN) == 0);
+
+		/* Manifests represent file content, so filter them like blobs */
+		if (omits)
+			oidset_insert(omits, &obj->oid);
+		return LOFR_MARK_SEEN; /* but not LOFR_DO_SHOW (hard omit) */
 	}
 }
 
@@ -199,6 +211,12 @@ static enum list_objects_filter_result filter_trees_depth(
 		return LOFR_ZERO;
 
 	case LOFS_BLOB:
+		filter_trees_update_omits(obj, omits, include_it);
+		return include_it ? LOFR_MARK_SEEN | LOFR_DO_SHOW : LOFR_ZERO;
+
+	case LOFS_MANIFEST:
+		assert(obj->type == OBJ_MANIFEST);
+		/* Manifests represent file content, so filter them like blobs */
 		filter_trees_update_omits(obj, omits, include_it);
 		return include_it ? LOFR_MARK_SEEN | LOFR_DO_SHOW : LOFR_ZERO;
 
@@ -327,6 +345,34 @@ static enum list_objects_filter_result filter_blobs_limit(
 		if (omits)
 			oidset_insert(omits, &obj->oid);
 		return LOFR_MARK_SEEN; /* but not LOFR_DO_SHOW (hard omit) */
+
+	case LOFS_MANIFEST:
+		assert(obj->type == OBJ_MANIFEST);
+		assert((obj->flags & SEEN) == 0);
+
+		/*
+		 * For manifests, we need to get the total logical size
+		 * (sum of all chunks), not the manifest object's size.
+		 * The manifest itself is small (just OID lists), but represents
+		 * potentially large file content.
+		 */
+		{
+			unsigned long total_size = 0;
+			
+			/* Get only the total size from the manifest header - no need for chunk OIDs */
+			if (get_manifest_chunk_oids(r, &obj->oid, &total_size, NULL) < 0) {
+				/* Can't read manifest - be conservative and include it */
+				goto include_it;
+			}
+			
+			/* Apply size filter using the total logical size */
+			if (total_size < filter_data->max_bytes)
+				goto include_it;
+			
+			if (omits)
+				oidset_insert(omits, &obj->oid);
+			return LOFR_MARK_SEEN; /* but not LOFR_DO_SHOW (hard omit) */
+		}
 	}
 
 include_it:
@@ -507,6 +553,30 @@ static enum list_objects_filter_result filter_sparse(
 		 */
 		frame->child_prov_omit = 1;
 		return LOFR_ZERO;
+
+	case LOFS_MANIFEST:
+		assert(obj->type == OBJ_MANIFEST);
+		assert((obj->flags & SEEN) == 0);
+
+		/* Manifests represent file content, so filter them like blobs */
+		frame = &filter_data->array_frame[filter_data->nr - 1];
+
+		dtype = DT_REG;
+		match = path_matches_pattern_list(pathname, strlen(pathname),
+					    filename, &dtype, &filter_data->pl,
+					    r->index);
+		if (match == UNDECIDED)
+			match = frame->default_match;
+		if (match == MATCHED) {
+			if (omits)
+				oidset_remove(omits, &obj->oid);
+			return LOFR_MARK_SEEN | LOFR_DO_SHOW;
+		}
+
+		if (omits)
+			oidset_insert(omits, &obj->oid);
+		frame->child_prov_omit = 1;
+		return LOFR_ZERO;
 	}
 }
 
@@ -602,6 +672,14 @@ static enum list_objects_filter_result filter_object_type(
 	case LOFS_BLOB:
 		assert(obj->type == OBJ_BLOB);
 
+		if (filter_data->object_type == OBJ_BLOB)
+			return LOFR_MARK_SEEN | LOFR_DO_SHOW;
+		return LOFR_MARK_SEEN;
+
+	case LOFS_MANIFEST:
+		assert(obj->type == OBJ_MANIFEST);
+
+		/* Manifests represent file content, filter like blobs */
 		if (filter_data->object_type == OBJ_BLOB)
 			return LOFR_MARK_SEEN | LOFR_DO_SHOW;
 		return LOFR_MARK_SEEN;

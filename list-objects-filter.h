@@ -59,7 +59,8 @@ enum list_objects_filter_situation {
 	LOFS_TAG,
 	LOFS_BEGIN_TREE,
 	LOFS_END_TREE,
-	LOFS_BLOB
+	LOFS_BLOB,
+	LOFS_MANIFEST
 };
 
 struct filter;

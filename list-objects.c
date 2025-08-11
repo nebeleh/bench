@@ -17,6 +17,10 @@
 #include "odb.h"
 #include "trace.h"
 #include "environment.h"
+#include "manifest.h"
+#include "manifest-walk.h"
+#include "repository.h"
+#include "oid-array.h"
 
 struct traversal_context {
 	struct rev_info *revs;
@@ -97,6 +101,102 @@ static void process_tree(struct traversal_context *ctx,
 			 struct strbuf *base,
 			 const char *name);
 
+static void process_chunk(struct traversal_context *ctx,
+			 const struct object_id *chunk_oid,
+			 const char *manifest_name);
+
+static void process_manifest(struct traversal_context *ctx,
+			     struct manifest *manifest,
+			     struct strbuf *path,
+			     const char *name)
+{
+	struct object *obj = &manifest->object;
+	size_t pathlen;
+	enum list_objects_filter_result r;
+	unsigned long total_size = 0;
+	struct oid_array chunk_oids = OID_ARRAY_INIT;
+	size_t i;
+
+	/* Similar to blob processing, check if we should process manifests */
+	if (!ctx->revs->blob_objects)
+		return;
+	if (!obj)
+		die("bad manifest object");
+	if (obj->flags & (UNINTERESTING | SEEN))
+		return;
+
+	/*
+	 * Pre-filter known-missing objects when explicitly requested.
+	 * This matches the blob behavior for consistency.
+	 */
+	if (ctx->revs->exclude_promisor_objects &&
+	    !odb_has_object(the_repository->objects, &obj->oid,
+			    HAS_OBJECT_RECHECK_PACKED | HAS_OBJECT_FETCH_PROMISOR) &&
+	    is_promisor_object(ctx->revs->repo, &obj->oid))
+		return;
+
+	/* Get manifest total size for potential filtering */
+	if (get_manifest_chunk_oids(ctx->revs->repo, &obj->oid, &total_size, &chunk_oids) < 0) {
+		oid_array_clear(&chunk_oids);
+		return;
+	}
+
+	pathlen = path->len;
+	strbuf_addstr(path, name);
+	
+	/*
+	 * Apply filters at the manifest level.
+	 * We pass LOFS_MANIFEST so the filter can handle manifests properly,
+	 * including getting the total logical size for size filtering.
+	 */
+	r = list_objects_filter__filter_object(ctx->revs->repo,
+					       LOFS_MANIFEST, obj,
+					       path->buf, &path->buf[pathlen],
+					       ctx->filter);
+	if (r & LOFR_MARK_SEEN)
+		obj->flags |= SEEN;
+	if (r & LOFR_DO_SHOW)
+		show_object(ctx, obj, path->buf);
+	
+	/*
+	 * If the manifest is shown, process its chunks.
+	 * Chunks are implementation details of manifests and should only
+	 * be included when their manifest is included.
+	 * This matches blob behavior - if a blob is filtered out,
+	 * it's not included. Similarly, if a manifest is filtered out,
+	 * its chunks shouldn't be included either.
+	 */
+	if (r & LOFR_DO_SHOW) {
+		for (i = 0; i < chunk_oids.nr; i++) {
+			process_chunk(ctx, &chunk_oids.oid[i], name);
+		}
+	}
+	
+	strbuf_setlen(path, pathlen);
+	oid_array_clear(&chunk_oids);
+}
+
+static void process_chunk(struct traversal_context *ctx,
+			 const struct object_id *chunk_oid,
+			 const char *manifest_name)
+{
+	struct blob *b = lookup_blob(ctx->revs->repo, chunk_oid);
+	if (!b)
+		return;
+	
+	/*
+	 * Chunks are implementation details of manifests.
+	 * They must always be included if their manifest is included.
+	 * We don't apply size filters to individual chunks - filtering
+	 * happens at the manifest level based on total file size.
+	 */
+	b->object.flags |= SEEN | NOT_USER_GIVEN;
+	
+	/* Include chunk in pack/output if showing objects */
+	if (ctx->show_object)
+		show_object(ctx, &b->object, manifest_name);
+}
+
 static void process_tree_contents(struct traversal_context *ctx,
 				  struct tree *tree,
 				  struct strbuf *base)
@@ -105,6 +205,7 @@ static void process_tree_contents(struct traversal_context *ctx,
 	struct name_entry entry;
 	enum interesting match = ctx->revs->diffopt.pathspec.nr == 0 ?
 		all_entries_interesting : entry_not_interesting;
+	int in_bench_mode = repo_has_bench_extensions(ctx->revs->repo);
 
 	init_tree_desc(&desc, &tree->object.oid, tree->buffer, tree->size);
 
@@ -133,6 +234,26 @@ static void process_tree_contents(struct traversal_context *ctx,
 		}
 		else if (S_ISGITLINK(entry.mode))
 			; /* ignore gitlink */
+		else if (in_bench_mode) {
+			/* In bench mode, file entries must be manifests */
+			enum object_type type;
+			type = oid_object_info(ctx->revs->repo, &entry.oid, NULL);
+			
+			if (type == OBJ_MANIFEST) {
+				struct manifest *m = lookup_manifest(ctx->revs->repo, &entry.oid);
+				if (!m) {
+					die(_("entry '%s' in tree %s has manifest mode, "
+					      "but is not a manifest"),
+					    entry.path, oid_to_hex(&tree->object.oid));
+				}
+				m->object.flags |= NOT_USER_GIVEN;
+				process_manifest(ctx, m, base, entry.path);
+			} else {
+				die(_("entry '%s' in tree %s should be a manifest in bench mode, "
+				      "but has object type %d"),
+				    entry.path, oid_to_hex(&tree->object.oid), type);
+			}
+		}
 		else {
 			struct blob *b = lookup_blob(ctx->revs->repo, &entry.oid);
 			if (!b) {
