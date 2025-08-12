@@ -8,6 +8,8 @@
 #include "hash.h"
 #include "config.h"
 #include "streaming.h"
+#include "convert.h"
+#include "trace.h"
 #include "manifest-walk.h"
 #include "write-or-die.h"
 #include "oid-array.h"
@@ -284,6 +286,79 @@ int stream_manifest_to_fd(struct repository *r, int fd, const struct object_id *
 	return bytes_read < 0 ? -1 : 0;
 }
 
+int stream_manifest_to_fd_filtered(struct repository *r, int fd, 
+                                   const struct object_id *manifest_oid,
+                                   struct stream_filter *filter)
+{
+	struct manifest_stream *stream;
+	unsigned long size;
+	char ibuf[1024 * 16]; /* Input buffer */
+	char obuf[1024 * 16]; /* Output buffer for filtered content */
+	ssize_t bytes_read;
+	int result = 0;
+	
+	stream = open_manifest_stream(r, manifest_oid, &size);
+	if (!stream) {
+		if (filter)
+			free_stream_filter(filter);
+		return -1;
+	}
+	
+	if (!filter || is_null_stream_filter(filter)) {
+		/* No filtering needed, use simple streaming */
+		while ((bytes_read = read_manifest_stream(stream, ibuf, sizeof(ibuf))) > 0) {
+			if (write_in_full(fd, ibuf, bytes_read) < 0) {
+				result = -1;
+				break;
+			}
+		}
+		if (bytes_read < 0)
+			result = -1;
+	} else {
+		/* Apply filters while streaming */
+		while ((bytes_read = read_manifest_stream(stream, ibuf, sizeof(ibuf))) > 0) {
+			size_t to_feed = bytes_read;
+			size_t to_receive = sizeof(obuf);
+			
+			if (stream_filter(filter, ibuf, &to_feed, obuf, &to_receive)) {
+				result = -1;
+				break;
+			}
+			
+			size_t filtered_size = sizeof(obuf) - to_receive;
+			if (filtered_size > 0 && write_in_full(fd, obuf, filtered_size) < 0) {
+				result = -1;
+				break;
+			}
+			
+			/* Handle any unconsumed input */
+			if (to_feed > 0) {
+				/* This shouldn't happen with our simple streaming,
+				 * but if it does, we'd need more complex buffering */
+				warning("manifest streaming: filter did not consume all input");
+			}
+		}
+		
+		if (bytes_read < 0)
+			result = -1;
+		
+		/* Drain any remaining filtered output */
+		if (result == 0) {
+			size_t to_receive = sizeof(obuf);
+			if (stream_filter(filter, NULL, NULL, obuf, &to_receive) == 0) {
+				size_t final_size = sizeof(obuf) - to_receive;
+				if (final_size > 0 && write_in_full(fd, obuf, final_size) < 0)
+					result = -1;
+			}
+		}
+		
+		free_stream_filter(filter);
+	}
+	
+	close_manifest_stream(stream);
+	return result;
+}
+
 /*
  * Internal function to build manifest content based on the configured version.
  * The caller is responsible for freeing the strbuf.
@@ -426,6 +501,65 @@ int get_manifest_chunk_oids(struct repository *r,
 	if (total_size)
 		*total_size = header.total_size;
 	
+	free(manifest_buffer);
+	return 0;
+}
+
+void *read_manifest_content(struct repository *r,
+                           const struct object_id *manifest_oid,
+                           unsigned long *size)
+{
+	struct manifest_stream *stream;
+	unsigned long manifest_size;
+	void *content;
+	ssize_t bytes_read, total_read = 0;
+	
+	stream = open_manifest_stream(r, manifest_oid, &manifest_size);
+	if (!stream)
+		return NULL;
+	
+	content = xmalloc(manifest_size);
+	while (total_read < manifest_size) {
+		bytes_read = read_manifest_stream(stream, 
+		                                  (char *)content + total_read,
+		                                  manifest_size - total_read);
+		if (bytes_read <= 0)
+			break;
+		total_read += bytes_read;
+	}
+	
+	close_manifest_stream(stream);
+	
+	if (total_read == manifest_size) {
+		*size = manifest_size;
+		return content;
+	}
+	
+	free(content);
+	return NULL;
+}
+
+int get_manifest_size(struct repository *r,
+                     const struct object_id *manifest_oid,
+                     unsigned long *size)
+{
+	enum object_type type;
+	unsigned long manifest_size;
+	void *manifest_buffer;
+	struct manifest_header header;
+	
+	/* Read the manifest object */
+	manifest_buffer = odb_read_object(r->objects, manifest_oid, &type, &manifest_size);
+	if (!manifest_buffer || type != OBJ_MANIFEST)
+		return -1;
+	
+	/* Parse the header to get the total size */
+	if (parse_manifest_header(manifest_buffer, manifest_size, &header) < 0) {
+		free(manifest_buffer);
+		return -1;
+	}
+	
+	*size = header.total_size;
 	free(manifest_buffer);
 	return 0;
 }

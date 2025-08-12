@@ -15,6 +15,8 @@
 #include "fsmonitor.h"
 #include "entry.h"
 #include "parallel-checkout.h"
+#include "manifest.h"
+#include "repository.h"
 
 static void create_directories(const char *path, int path_len,
 			       const struct checkout *state)
@@ -100,6 +102,13 @@ void *read_blob_entry(const struct cache_entry *ce, size_t *size)
 	if (blob_data) {
 		if (type == OBJ_BLOB)
 			return blob_data;
+		if (type == OBJ_MANIFEST) {
+			/* For manifests, read the actual content.
+			 * This is only used for symlinks since regular files
+			 * are always streamed for manifests. */
+			free(blob_data); /* Free the manifest object itself */
+			return read_manifest_content(the_repository, &ce->oid, size);
+		}
 		free(blob_data);
 	}
 	return NULL;
@@ -134,12 +143,23 @@ static int streaming_write_entry(const struct cache_entry *ce, char *path,
 {
 	int result = 0;
 	int fd;
+	enum object_type type;
+	unsigned long size;
 
 	fd = open_output_fd(path, ce, to_tempfile);
 	if (fd < 0)
 		return -1;
 
-	result |= stream_blob_to_fd(fd, &ce->oid, filter, 1);
+	/* Check object type to handle manifests differently */
+	type = oid_object_info(the_repository, &ce->oid, &size);
+	if (type == OBJ_MANIFEST) {
+		/* For manifests, use our filtered streaming function */
+		result |= stream_manifest_to_fd_filtered(the_repository, fd, &ce->oid, filter);
+	} else {
+		/* For blobs, use the original streaming function */
+		result |= stream_blob_to_fd(fd, &ce->oid, filter, 1);
+	}
+	
 	*fstat_done = fstat_checkout_output(fd, state, statbuf);
 	result |= close(fd);
 
@@ -308,6 +328,18 @@ static int write_entry(struct cache_entry *ce, char *path, struct conv_attrs *ca
 					   state, to_tempfile,
 					   &fstat_done, &st))
 			goto finish;
+		
+		/* Also try streaming for manifests even without a filter.
+		 * Manifests should preferably use streaming to avoid loading
+		 * large amounts of data into memory. */
+		if (!filter) {
+			enum object_type type = oid_object_info(the_repository, &ce->oid, NULL);
+			if (type == OBJ_MANIFEST &&
+			    !streaming_write_entry(ce, path, NULL,
+						  state, to_tempfile,
+						  &fstat_done, &st))
+				goto finish;
+		}
 	}
 
 	switch (ce_mode_s_ifmt) {

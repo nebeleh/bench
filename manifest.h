@@ -87,6 +87,17 @@ int close_manifest_stream(struct manifest_stream *stream);
 int stream_manifest_to_fd(struct repository *r, int fd, const struct object_id *manifest_oid);
 
 /**
+ * Stream manifest content to a file descriptor with filtering.
+ * This applies the given stream filter (CRLF conversion, clean/smudge, ident)
+ * while streaming manifest content. The filter is freed by this function.
+ * Returns 0 on success, -1 on error.
+ **/
+struct stream_filter;
+int stream_manifest_to_fd_filtered(struct repository *r, int fd,
+                                   const struct object_id *manifest_oid,
+                                   struct stream_filter *filter);
+
+/**
  * Get the total size and chunk OIDs from a manifest.
  * This is used for reachability analysis and filtering.
  * The chunk_oids array will be populated with the OIDs.
@@ -97,5 +108,26 @@ int get_manifest_chunk_oids(struct repository *r,
                            const struct object_id *manifest_oid,
                            unsigned long *total_size,
                            struct oid_array *chunk_oids);
+
+/**
+ * Read the entire manifest content into memory.
+ * This is used when streaming is not appropriate (small files, or when
+ * filters need the entire content at once).
+ * The caller is responsible for freeing the returned buffer.
+ * Returns the buffer on success, NULL on error.
+ * On success, *size contains the total content size.
+ **/
+void *read_manifest_content(struct repository *r,
+                           const struct object_id *manifest_oid,
+                           unsigned long *size);
+
+/**
+ * Get the logical size of a manifest without reading all content.
+ * This reads just the manifest header to get the total size.
+ * Returns 0 on success with size in *size, -1 on error.
+ **/
+int get_manifest_size(struct repository *r,
+                     const struct object_id *manifest_oid,
+                     unsigned long *size);
 
 #endif /* MANIFEST_H */
