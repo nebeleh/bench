@@ -46,6 +46,7 @@
 #include "setup.h"
 #include "strmap.h"
 #include "ws.h"
+#include "manifest.h"
 
 #ifdef NO_FAST_WORKING_DIRECTORY
 #define FAST_WORKING_DIRECTORY 0
@@ -4218,8 +4219,10 @@ int diff_populate_filespec(struct repository *r,
 		}
 	}
 	else {
+		enum object_type type;
 		struct object_info info = {
-			.sizep = &s->size
+			.sizep = &s->size,
+			.typep = &type
 		};
 
 		if (!(size_only || check_binary))
@@ -4241,6 +4244,13 @@ int diff_populate_filespec(struct repository *r,
 			die("unable to read %s", oid_to_hex(&s->oid));
 
 object_read:
+		/* Handle manifest objects - use logical size for binary detection */
+		if (type == OBJ_MANIFEST) {
+			unsigned long logical_size;
+			if (!get_manifest_size(r, &s->oid, &logical_size))
+				s->size = logical_size;
+		}
+
 		if (size_only || check_binary) {
 			if (size_only)
 				return 0;
@@ -4255,6 +4265,18 @@ object_read:
 			if (odb_read_object_info_extended(r->objects, &s->oid, &info,
 							  OBJECT_INFO_LOOKUP_REPLACE))
 				die("unable to read %s", oid_to_hex(&s->oid));
+		}
+		
+		/* If we loaded raw manifest content, replace with actual file content */
+		if (type == OBJ_MANIFEST && s->data) {
+			unsigned long actual_size;
+			void *actual_content = read_manifest_content(r, &s->oid, &actual_size);
+			if (actual_content) {
+				free(s->data);
+				s->data = actual_content;
+				s->size = actual_size;
+				s->should_free = 1;
+			}
 		}
 		s->should_free = 1;
 	}
