@@ -38,6 +38,7 @@
 #include "streaming.h"
 #include "version.h"
 #include "mailmap.h"
+#include "manifest.h"
 #include "progress.h"
 #include "commit-slab.h"
 
@@ -697,6 +698,17 @@ static void show_tagger(const char *buf, struct rev_info *rev)
 	strbuf_release(&out);
 }
 
+static int show_manifest_object(const struct object_id *oid, struct rev_info *rev, const char *obj_name)
+{
+	fflush(rev->diffopt.file);
+	
+	/* TODO: Add textconv support for manifests. Currently we always stream the raw content.
+	 * Supporting textconv would require loading the entire file into memory,
+	 * which defeats the purpose of streaming for large files.
+	 * For now, prioritize memory efficiency over textconv features. */
+	return stream_manifest_to_fd(the_repository, 1, oid);
+}
+
 static int show_blob_object(const struct object_id *oid, struct rev_info *rev, const char *obj_name)
 {
 	struct object_id oidc;
@@ -825,6 +837,9 @@ int cmd_show(int argc,
 		switch (o->type) {
 		case OBJ_BLOB:
 			ret = show_blob_object(&o->oid, &rev, name);
+			break;
+		case OBJ_MANIFEST:
+			ret = show_manifest_object(&o->oid, &rev, name);
 			break;
 		case OBJ_TAG: {
 			struct tag *t = (struct tag *)o;
