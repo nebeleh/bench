@@ -302,6 +302,18 @@ static void prepare_pack_objects(struct child_process *cmd,
 				 const struct pack_objects_args *args,
 				 const char *out)
 {
+	/*
+	 * Set git_cmd to ensure pack-objects is run as a built-in command
+	 * through the bench/git executable, rather than searching PATH.
+	 * This is critical for:
+	 * 1. Users who compile locally without system-wide installation
+	 * 2. Bench repositories with custom extensions that must be recognized
+	 * 
+	 * Without this flag, the subprocess would search PATH for "pack-objects"
+	 * which may not exist or may be a different version, causing failures
+	 * with custom repository extensions like "bench" and "benchmanifestversion".
+	 */
+	cmd->git_cmd = 1;
 	strvec_push(&cmd->args, "pack-objects");
 	if (args->window)
 		strvec_pushf(&cmd->args, "--window=%s", args->window);

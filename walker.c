@@ -13,6 +13,7 @@
 #include "tag.h"
 #include "blob.h"
 #include "refs.h"
+#include "manifest.h"
 #include "progress.h"
 
 static struct object_id current_commit_oid;
@@ -61,10 +62,16 @@ static int process_tree(struct walker *walker, struct tree *tree)
 				obj = &tree->object;
 		}
 		else {
-			struct blob *blob = lookup_blob(the_repository,
-							&entry.oid);
-			if (blob)
-				obj = &blob->object;
+			/* Regular files can be blobs or manifests depending on mode */
+			if (object_type(entry.mode) == OBJ_MANIFEST) {
+				struct manifest *manifest = lookup_manifest(the_repository, &entry.oid);
+				if (manifest)
+					obj = &manifest->object;
+			} else {
+				struct blob *blob = lookup_blob(the_repository, &entry.oid);
+				if (blob)
+					obj = &blob->object;
+			}
 		}
 		if (!obj || process(walker, obj))
 			return -1;

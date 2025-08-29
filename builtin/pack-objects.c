@@ -959,6 +959,15 @@ static void compute_layer_order(struct object_entry **wo, unsigned int *wo_end)
 	}
 
 	/*
+	 * And then all the manifests.
+	 */
+	for (i = last_untagged; i < to_pack.nr_objects; i++) {
+		if (oe_type(&objects[i]) != OBJ_MANIFEST)
+			continue;
+		add_to_write_order(wo, wo_end, &objects[i]);
+	}
+
+	/*
 	 * Finally all the rest in really tight order
 	 */
 	for (i = last_untagged; i < to_pack.nr_objects; i++) {
@@ -1981,9 +1990,11 @@ static void add_pbase_object(struct tree_desc *tree,
 		if (cmp < 0)
 			return;
 		if (name[cmplen] != '/') {
-			add_object_entry(&entry.oid,
-					 object_type(entry.mode),
-					 fullname, 1);
+			/*
+			 * With manifest modes, object_type() should return the correct
+			 * type (OBJ_MANIFEST for manifest modes, OBJ_BLOB for blob modes).
+			 */
+			add_object_entry(&entry.oid, object_type(entry.mode), fullname, 1);
 			return;
 		}
 		if (S_ISDIR(entry.mode)) {
@@ -2230,7 +2241,8 @@ static void check_object(struct object_entry *entry, uint32_t object_index)
 			oe_set_type(entry, entry->in_pack_type);
 			SET_SIZE(entry, in_pack_size);
 			entry->in_pack_header_size = used;
-			if (oe_type(entry) < OBJ_COMMIT || oe_type(entry) > OBJ_BLOB)
+			if (oe_type(entry) < OBJ_COMMIT || 
+			    (oe_type(entry) > OBJ_BLOB && oe_type(entry) != OBJ_MANIFEST))
 				goto give_up;
 			unuse_pack(&w_curs);
 			return;

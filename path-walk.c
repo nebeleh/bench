@@ -16,6 +16,7 @@
 #include "revision.h"
 #include "string-list.h"
 #include "strmap.h"
+#include "manifest.h"
 #include "tag.h"
 #include "trace2.h"
 #include "tree.h"
@@ -147,6 +148,9 @@ static int add_tree_entries(struct path_walk_context *ctx,
 			o = child ? &child->object : NULL;
 		} else if (type == OBJ_BLOB) {
 			struct blob *child = lookup_blob(ctx->repo, &entry.oid);
+			o = child ? &child->object : NULL;
+		} else if (type == OBJ_MANIFEST) {
+			struct manifest *child = lookup_manifest(ctx->repo, &entry.oid);
 			o = child ? &child->object : NULL;
 		} else {
 			BUG("invalid type for tree entry: %d", type);

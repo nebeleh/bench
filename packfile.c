@@ -1374,6 +1374,7 @@ static enum object_type packed_to_object_type(struct repository *r,
 	case OBJ_TREE:
 	case OBJ_BLOB:
 	case OBJ_TAG:
+	case OBJ_MANIFEST:
 		break;
 	default:
 		error("unknown object type %i at offset %"PRIuMAX" in %s",
@@ -1802,6 +1803,7 @@ void *unpack_entry(struct repository *r, struct packed_git *p, off_t obj_offset,
 	case OBJ_TREE:
 	case OBJ_BLOB:
 	case OBJ_TAG:
+	case OBJ_MANIFEST:
 		if (!base_from_cache)
 			data = unpack_compressed_entry(p, &w_curs, curpos, size);
 		break;

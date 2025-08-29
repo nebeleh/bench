@@ -19,6 +19,7 @@
 #include "pack-mtimes.h"
 #include "config.h"
 #include "run-command.h"
+#include "manifest.h"
 #include "sequencer.h"
 
 struct connectivity_progress {
@@ -225,6 +226,9 @@ static void add_recent_object(const struct object_id *oid,
 		break;
 	case OBJ_BLOB:
 		obj = (struct object *)lookup_blob(the_repository, oid);
+		break;
+	case OBJ_MANIFEST:
+		obj = (struct object *)lookup_manifest(the_repository, oid);
 		break;
 	default:
 		die("unknown object type for %s: %s",

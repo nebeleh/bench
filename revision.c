@@ -1850,13 +1850,12 @@ static void do_add_index_objects_to_pending(struct rev_info *revs,
 	ensure_full_index(istate);
 	for (i = 0; i < istate->cache_nr; i++) {
 		struct cache_entry *ce = istate->cache[i];
-		struct blob *blob;
 
-		/* Handle different object types based on cache entry mode */
+		if (S_ISGITLINK(ce->ce_mode))
+			continue;
+
+		/* Handle blob vs manifest based on cache entry mode */
 		switch (object_type(ce->ce_mode)) {
-		case OBJ_COMMIT:
-			/* Gitlink/submodule - skip */
-			break;
 		case OBJ_BLOB: {
 			struct blob *blob = lookup_blob(revs->repo, &ce->oid);
 			if (!blob)

@@ -18,6 +18,7 @@
 #include "refs.h"
 #include "url.h"
 #include "utf8.h"
+#include "manifest.h"
 #include "oidset.h"
 #include "packfile.h"
 #include "submodule-config.h"
@@ -381,11 +382,20 @@ static int fsck_walk_tree(struct tree *tree, void *data, struct fsck_options *op
 			result = options->walk(obj, OBJ_TREE, data, options);
 		}
 		else if (S_ISREG(entry.mode) || S_ISLNK(entry.mode)) {
-			obj = (struct object *)lookup_blob(the_repository, &entry.oid);
-			if (name && obj)
-				fsck_put_object_name(options, &entry.oid, "%s%s",
-						     name, entry.path);
-			result = options->walk(obj, OBJ_BLOB, data, options);
+			/* Regular files can be blobs or manifests depending on mode */
+			if (object_type(entry.mode) == OBJ_MANIFEST) {
+				obj = (struct object *)lookup_manifest(the_repository, &entry.oid);
+				if (name && obj)
+					fsck_put_object_name(options, &entry.oid, "%s%s",
+							     name, entry.path);
+				result = options->walk(obj, OBJ_MANIFEST, data, options);
+			} else {
+				obj = (struct object *)lookup_blob(the_repository, &entry.oid);
+				if (name && obj)
+					fsck_put_object_name(options, &entry.oid, "%s%s",
+							     name, entry.path);
+				result = options->walk(obj, OBJ_BLOB, data, options);
+			}
 		}
 		else {
 			result = error("in tree %s: entry %s has bad mode %.6o",

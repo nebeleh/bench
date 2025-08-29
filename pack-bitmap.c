@@ -1938,7 +1938,7 @@ static void filter_bitmap_object_type(struct bitmap_index *bitmap_git,
 				      struct bitmap *to_filter,
 				      enum object_type object_type)
 {
-	if (object_type < OBJ_COMMIT || object_type > OBJ_TAG)
+	if (object_type < OBJ_COMMIT || object_type > OBJ_MANIFEST)
 		BUG("filter_bitmap_object_type given invalid object");
 
 	if (object_type != OBJ_TAG)
@@ -1949,6 +1949,8 @@ static void filter_bitmap_object_type(struct bitmap_index *bitmap_git,
 		filter_bitmap_exclude_type(bitmap_git, tip_objects, to_filter, OBJ_TREE);
 	if (object_type != OBJ_BLOB)
 		filter_bitmap_exclude_type(bitmap_git, tip_objects, to_filter, OBJ_BLOB);
+	if (object_type != OBJ_MANIFEST)
+		filter_bitmap_exclude_type(bitmap_git, tip_objects, to_filter, OBJ_MANIFEST);
 }
 
 static int filter_bitmap(struct bitmap_index *bitmap_git,

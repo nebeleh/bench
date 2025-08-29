@@ -575,6 +575,7 @@ static void *unpack_raw_entry(struct object_entry *obj,
 	case OBJ_TREE:
 	case OBJ_BLOB:
 	case OBJ_TAG:
+	case OBJ_MANIFEST:
 		break;
 	default:
 		bad_object(obj->idx.offset, _("unknown object type %d"), obj->type);
