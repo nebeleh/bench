@@ -205,7 +205,6 @@ static void process_tree_contents(struct traversal_context *ctx,
 	struct name_entry entry;
 	enum interesting match = ctx->revs->diffopt.pathspec.nr == 0 ?
 		all_entries_interesting : entry_not_interesting;
-	int in_bench_mode = repo_has_bench_extensions(ctx->revs->repo);
 
 	init_tree_desc(&desc, &tree->object.oid, tree->buffer, tree->size);
 
@@ -232,14 +231,24 @@ static void process_tree_contents(struct traversal_context *ctx,
 			process_tree(ctx, t, base, entry.path);
 			ctx->depth--;
 		}
-		else if (S_ISGITLINK(entry.mode))
-			; /* ignore gitlink */
-		else if (in_bench_mode) {
-			/* In bench mode, file entries must be manifests */
-			enum object_type type;
-			type = oid_object_info(ctx->revs->repo, &entry.oid, NULL);
-			
-			if (type == OBJ_MANIFEST) {
+		else {
+			/* Use manifest modes to determine object type */
+			switch (object_type(entry.mode)) {
+			case OBJ_COMMIT:
+				/* Gitlink/submodule - ignore */
+				break;
+			case OBJ_BLOB: {
+				struct blob *b = lookup_blob(ctx->revs->repo, &entry.oid);
+				if (!b) {
+					die(_("entry '%s' in tree %s has blob mode, "
+					      "but is not a blob"),
+					    entry.path, oid_to_hex(&tree->object.oid));
+				}
+				b->object.flags |= NOT_USER_GIVEN;
+				process_blob(ctx, b, base, entry.path);
+				break;
+			}
+			case OBJ_MANIFEST: {
 				struct manifest *m = lookup_manifest(ctx->revs->repo, &entry.oid);
 				if (!m) {
 					die(_("entry '%s' in tree %s has manifest mode, "
@@ -248,21 +257,12 @@ static void process_tree_contents(struct traversal_context *ctx,
 				}
 				m->object.flags |= NOT_USER_GIVEN;
 				process_manifest(ctx, m, base, entry.path);
-			} else {
-				die(_("entry '%s' in tree %s should be a manifest in bench mode, "
-				      "but has object type %d"),
-				    entry.path, oid_to_hex(&tree->object.oid), type);
+				break;
 			}
-		}
-		else {
-			struct blob *b = lookup_blob(ctx->revs->repo, &entry.oid);
-			if (!b) {
-				die(_("entry '%s' in tree %s has blob mode, "
-				      "but is not a blob"),
-				    entry.path, oid_to_hex(&tree->object.oid));
+			default:
+				die(_("entry '%s' in tree %s has unknown mode %06o"),
+				    entry.path, oid_to_hex(&tree->object.oid), entry.mode);
 			}
-			b->object.flags |= NOT_USER_GIVEN;
-			process_blob(ctx, b, base, entry.path);
 		}
 	}
 }

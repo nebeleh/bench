@@ -1852,15 +1852,32 @@ static void do_add_index_objects_to_pending(struct rev_info *revs,
 		struct cache_entry *ce = istate->cache[i];
 		struct blob *blob;
 
-		if (S_ISGITLINK(ce->ce_mode))
-			continue;
-
-		blob = lookup_blob(revs->repo, &ce->oid);
-		if (!blob)
-			die("unable to add index blob to traversal");
-		blob->object.flags |= flags;
-		add_pending_object_with_path(revs, &blob->object, "",
-					     ce->ce_mode, ce->name);
+		/* Handle different object types based on cache entry mode */
+		switch (object_type(ce->ce_mode)) {
+		case OBJ_COMMIT:
+			/* Gitlink/submodule - skip */
+			break;
+		case OBJ_BLOB: {
+			struct blob *blob = lookup_blob(revs->repo, &ce->oid);
+			if (!blob)
+				die("unable to add index blob to traversal");
+			blob->object.flags |= flags;
+			add_pending_object_with_path(revs, &blob->object, "",
+						     ce->ce_mode, ce->name);
+			break;
+		}
+		case OBJ_MANIFEST: {
+			struct manifest *manifest = lookup_manifest(revs->repo, &ce->oid);
+			if (!manifest)
+				die("unable to add index manifest to traversal");
+			manifest->object.flags |= flags;
+			add_pending_object_with_path(revs, &manifest->object, "",
+						     ce->ce_mode, ce->name);
+			break;
+		}
+		default:
+			die("unknown object type for cache entry mode %06o", ce->ce_mode);
+		}
 	}
 
 	if (istate->cache_tree) {
