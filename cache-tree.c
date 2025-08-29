@@ -17,6 +17,7 @@
 #include "promisor-remote.h"
 #include "trace.h"
 #include "trace2.h"
+#include "setup.h"
 
 #ifndef DEBUG_CACHE_TREE
 #define DEBUG_CACHE_TREE 0
@@ -392,6 +393,19 @@ static int update_one(struct cache_tree *it,
 		else {
 			oid = &ce->oid;
 			mode = ce->ce_mode;
+			
+			/*
+			 * In Bench repositories, check if this object is actually a manifest.
+			 * If so, update the mode to use S_IFMANIFEST instead of S_IFREG.
+			 */
+			if (repo_has_bench_extensions(the_repository) && S_ISREG(mode)) {
+				enum object_type actual_type = oid_object_info(the_repository, oid, NULL);
+				if (actual_type == OBJ_MANIFEST) {
+					/* Convert regular file mode to manifest mode */
+					mode = S_IFMANIFEST | (mode & 0777);
+				}
+			}
+			
 			entlen = pathlen - baselen;
 			i++;
 		}
@@ -979,6 +993,19 @@ static int verify_one(struct repository *r,
 		} else {
 			oid = &ce->oid;
 			mode = ce->ce_mode;
+			
+			/*
+			 * In Bench repositories, check if this object is actually a manifest.
+			 * If so, update the mode to use S_IFMANIFEST instead of S_IFREG.
+			 */
+			if (repo_has_bench_extensions(r) && S_ISREG(mode)) {
+				enum object_type actual_type = oid_object_info(r, oid, NULL);
+				if (actual_type == OBJ_MANIFEST) {
+					/* Convert regular file mode to manifest mode */
+					mode = S_IFMANIFEST | (mode & 0777);
+				}
+			}
+			
 			entlen = ce_namelen(ce) - path->len;
 			i++;
 		}

@@ -491,6 +491,7 @@ static int fill_bitmap_tree(struct bitmap_writer *writer,
 				return -1;
 			break;
 		case OBJ_BLOB:
+		case OBJ_MANIFEST:
 			pos = find_object_pos(writer, &entry.oid, &found);
 			if (!found)
 				return -1;

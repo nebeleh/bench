@@ -22,6 +22,7 @@
 #include "object-file.h"
 #include "odb.h"
 #include "commit-reach.h"
+#include "manifest.h"
 
 #ifdef EXPAT_NEEDS_XMLPARSE_H
 #include <xmlparse.h>
@@ -1299,6 +1300,20 @@ static struct object_list **process_blob(struct blob *blob,
 	return add_one_object(obj, p);
 }
 
+static struct object_list **process_manifest(struct manifest *manifest,
+					     struct object_list **p)
+{
+	struct object *obj = &manifest->object;
+
+	obj->flags |= LOCAL;
+
+	if (obj->flags & (UNINTERESTING | SEEN))
+		return p;
+
+	obj->flags |= SEEN;
+	return add_one_object(obj, p);
+}
+
 static struct object_list **process_tree(struct tree *tree,
 					 struct object_list **p)
 {
@@ -1327,6 +1342,10 @@ static struct object_list **process_tree(struct tree *tree,
 		case OBJ_BLOB:
 			p = process_blob(lookup_blob(the_repository, &entry.oid),
 					 p);
+			break;
+		case OBJ_MANIFEST:
+			p = process_manifest(lookup_manifest(the_repository, &entry.oid),
+					     p);
 			break;
 		default:
 			/* Subproject commit - not in this repository */
@@ -1369,6 +1388,10 @@ static int get_delta(struct rev_info *revs, struct remote_lock *lock)
 		}
 		if (obj->type == OBJ_BLOB) {
 			p = process_blob((struct blob *)obj, p);
+			continue;
+		}
+		if (obj->type == OBJ_MANIFEST) {
+			p = process_manifest((struct manifest *)obj, p);
 			continue;
 		}
 		die("unknown pending object %s (%s)", oid_to_hex(&obj->oid), name);

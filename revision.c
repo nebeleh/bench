@@ -46,6 +46,7 @@
 #include "bloom.h"
 #include "json-writer.h"
 #include "list-objects-filter-options.h"
+#include "manifest.h"
 #include "resolve-undo.h"
 #include "parse-options.h"
 #include "wildmatch.h"
@@ -68,6 +69,15 @@ static void mark_blob_uninteresting(struct blob *blob)
 	blob->object.flags |= UNINTERESTING;
 }
 
+static void mark_manifest_uninteresting(struct manifest *manifest)
+{
+	if (!manifest)
+		return;
+	if (manifest->object.flags & UNINTERESTING)
+		return;
+	manifest->object.flags |= UNINTERESTING;
+}
+
 static void mark_tree_contents_uninteresting(struct repository *r,
 					     struct tree *tree)
 {
@@ -85,6 +95,9 @@ static void mark_tree_contents_uninteresting(struct repository *r,
 			break;
 		case OBJ_BLOB:
 			mark_blob_uninteresting(lookup_blob(r, &entry.oid));
+			break;
+		case OBJ_MANIFEST:
+			mark_manifest_uninteresting(lookup_manifest(r, &entry.oid));
 			break;
 		default:
 			/* Subproject commit - not in this repository */
@@ -199,6 +212,13 @@ static void add_children_by_path(struct repository *r,
 		case OBJ_BLOB:
 			if (tree->object.flags & UNINTERESTING) {
 				struct blob *child = lookup_blob(r, &entry.oid);
+				if (child)
+					child->object.flags |= UNINTERESTING;
+			}
+			break;
+		case OBJ_MANIFEST:
+			if (tree->object.flags & UNINTERESTING) {
+				struct manifest *child = lookup_manifest(r, &entry.oid);
 				if (child)
 					child->object.flags |= UNINTERESTING;
 			}

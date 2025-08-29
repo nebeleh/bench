@@ -151,12 +151,22 @@ enum object_type {
 #define S_IFGITLINK	0160000
 #define S_ISGITLINK(m)	(((m) & S_IFMT) == S_IFGITLINK)
 
+/*
+ * A "manifest" is a Bench-specific object type for large file handling.
+ *
+ * The value 0110000 is a custom file type for Bench repositories,
+ * positioned between regular files (0100000) and gitlinks (0160000).
+ */
+#define S_IFMANIFEST	0110000
+#define S_ISMANIFEST(m)	(((m) & S_IFMT) == S_IFMANIFEST)
+
 #define S_ISSPARSEDIR(m) ((m) == S_IFDIR)
 
 static inline enum object_type object_type(unsigned int mode)
 {
 	return S_ISDIR(mode) ? OBJ_TREE :
 		S_ISGITLINK(mode) ? OBJ_COMMIT :
+		S_ISMANIFEST(mode) ? OBJ_MANIFEST :
 		OBJ_BLOB;
 }
 
@@ -180,6 +190,8 @@ static inline unsigned int canon_mode(unsigned int mode)
 		return S_IFLNK;
 	if (S_ISDIR(mode))
 		return S_IFDIR;
+	if (S_ISMANIFEST(mode))
+		return S_IFMANIFEST | ce_permissions(mode);
 	return S_IFGITLINK;
 }
 
