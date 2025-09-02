@@ -10,6 +10,7 @@
 #include "tree.h"
 #include "blob.h"
 #include "alloc.h"
+#include "manifest.h"
 #include "gpg-interface.h"
 #include "hex.h"
 #include "packfile.h"
@@ -177,6 +178,8 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 
 	if (!strcmp(type, blob_type)) {
 		item->tagged = (struct object *)lookup_blob(r, &oid);
+	} else if (!strcmp(type, manifest_type)) {
+		item->tagged = (struct object *)lookup_manifest(r, &oid);
 	} else if (!strcmp(type, tree_type)) {
 		item->tagged = (struct object *)lookup_tree(r, &oid);
 	} else if (!strcmp(type, commit_type)) {

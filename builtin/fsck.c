@@ -27,6 +27,7 @@
 #include "worktree.h"
 #include "pack-revindex.h"
 #include "pack-bitmap.h"
+#include "manifest.h"
 
 #define REACHABLE 0x0001
 #define SEEN      0x0002
@@ -825,11 +826,21 @@ static void fsck_index(struct index_state *istate, const char *index_path,
 		mode = istate->cache[i]->ce_mode;
 		if (S_ISGITLINK(mode))
 			continue;
-		blob = lookup_blob(the_repository,
-				   &istate->cache[i]->oid);
-		if (!blob)
-			continue;
-		obj = &blob->object;
+		
+		/* Handle blob vs manifest based on cache entry mode */
+		if (object_type(mode) == OBJ_MANIFEST) {
+			struct manifest *manifest = lookup_manifest(the_repository,
+							    &istate->cache[i]->oid);
+			if (!manifest)
+				continue;
+			obj = &manifest->object;
+		} else {
+			blob = lookup_blob(the_repository,
+					   &istate->cache[i]->oid);
+			if (!blob)
+				continue;
+			obj = &blob->object;
+		}
 		obj->flags |= USED;
 		fsck_put_object_name(&fsck_walk_options, &obj->oid,
 				     "%s:%s",

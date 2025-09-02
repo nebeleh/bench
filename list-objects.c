@@ -489,6 +489,10 @@ static void traverse_non_commits(struct traversal_context *ctx,
 			process_blob(ctx, (struct blob *)obj, base, path);
 			continue;
 		}
+		if (obj->type == OBJ_MANIFEST) {
+			process_manifest(ctx, (struct manifest *)obj, base, path);
+			continue;
+		}
 		die("unknown pending object %s (%s)",
 		    oid_to_hex(&obj->oid), name);
 	}

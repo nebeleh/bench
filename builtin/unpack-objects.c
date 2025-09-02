@@ -20,6 +20,7 @@
 #include "decorate.h"
 #include "fsck.h"
 #include "packfile.h"
+#include "manifest.h"
 
 static int dry_run, quiet, recover, has_errors, strict;
 static const char unpack_usage[] = "git unpack-objects [-n] [-q] [-r] [--strict]";
@@ -292,6 +293,20 @@ static void write_object(unsigned nr, enum object_type type,
 		else
 			die("invalid blob object");
 		obj_list[nr].obj = NULL;
+	} else if (type == OBJ_MANIFEST) {
+		struct manifest *manifest;
+		if (write_object_file(buf, size, type,
+				      &obj_list[nr].oid) < 0)
+			die("failed to write object");
+		added_object(nr, type, buf, size);
+		free(buf);
+
+		manifest = lookup_manifest(the_repository, &obj_list[nr].oid);
+		if (manifest)
+			manifest->object.flags |= FLAG_WRITTEN;
+		else
+			die("invalid manifest object");
+		obj_list[nr].obj = NULL;
 	} else {
 		struct object *obj;
 		int eaten;
@@ -561,6 +576,8 @@ static void unpack_one(unsigned nr)
 			return;
 		}
 		/* fallthrough */
+	case OBJ_MANIFEST:
+		/* TODO: Add manifest streaming support for large manifest objects */
 	case OBJ_COMMIT:
 	case OBJ_TREE:
 	case OBJ_TAG:

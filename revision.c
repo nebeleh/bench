@@ -515,6 +515,19 @@ static struct commit *handle_commit(struct rev_info *revs,
 		add_pending_object_with_path(revs, object, name, mode, path);
 		return NULL;
 	}
+
+	/*
+	 * Manifest object? Handle like blobs since they represent file content.
+	 */
+	if (object->type == OBJ_MANIFEST) {
+		if (!revs->blob_objects)
+			return NULL;
+		if (flags & UNINTERESTING)
+			return NULL;
+		add_pending_object_with_path(revs, object, name, mode, path);
+		return NULL;
+	}
+
 	die("%s is unknown object", name);
 }
 
@@ -1853,6 +1866,7 @@ static void do_add_index_objects_to_pending(struct rev_info *revs,
 
 		if (S_ISGITLINK(ce->ce_mode))
 			continue;
+		
 
 		/* Handle blob vs manifest based on cache entry mode */
 		switch (object_type(ce->ce_mode)) {
