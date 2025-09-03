@@ -1313,11 +1313,13 @@ int index_path(struct index_state *istate, struct object_id *oid,
 			 * Currently we create a single chunk containing the entire file.
 			 */
 			if (flags & INDEX_WRITE_OBJECT) {
-				if (write_manifest_object(repo, oid, st->st_size, 1, &chunk_oid) < 0)
+				/* For single chunk, content OID equals chunk OID */
+				if (write_manifest_object(repo, oid, st->st_size, &chunk_oid, 1, &chunk_oid) < 0)
 					rc = error(_("%s: failed to create manifest"), path);
 			} else {
 				/* Just hashing - create manifest hash without writing */
-				if (hash_manifest_object(repo, oid, st->st_size, 1, &chunk_oid) < 0)
+				/* For single chunk, content OID equals chunk OID */
+				if (hash_manifest_object(repo, oid, st->st_size, &chunk_oid, 1, &chunk_oid) < 0)
 					rc = error(_("%s: failed to hash manifest"), path);
 			}
 		} else {
@@ -1339,7 +1341,7 @@ int index_path(struct index_state *istate, struct object_id *oid,
 				/* Just hashing */
 				hash_object_file(the_hash_algo, sb.buf, sb.len,
 						 OBJ_BLOB, &chunk_oid);
-				if (hash_manifest_object(repo, oid, sb.len, 1, &chunk_oid) < 0)
+				if (hash_manifest_object(repo, oid, sb.len, &chunk_oid, 1, &chunk_oid) < 0)
 					rc = error(_("%s: failed to hash manifest"), path);
 			} else {
 				/* Write chunk */
@@ -1347,7 +1349,7 @@ int index_path(struct index_state *istate, struct object_id *oid,
 					rc = error(_("%s: failed to insert chunk into database"), path);
 				else {
 					/* Create manifest */
-					if (write_manifest_object(repo, oid, sb.len, 1, &chunk_oid) < 0)
+					if (write_manifest_object(repo, oid, sb.len, &chunk_oid, 1, &chunk_oid) < 0)
 						rc = error(_("%s: failed to create manifest"), path);
 				}
 			}

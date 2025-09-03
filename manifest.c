@@ -13,6 +13,7 @@
 #include "manifest-walk.h"
 #include "write-or-die.h"
 #include "oid-array.h"
+#include "environment.h"
 
 const char *manifest_type = "manifest";
 
@@ -64,6 +65,7 @@ struct manifest_stream {
 struct manifest_header {
 	int version;
 	unsigned long total_size;
+	struct object_id content_oid;  /* OID of complete file content (after filters) */
 	size_t chunk_count;
 	const char *chunk_data;  /* Pointer to start of chunk OID data */
 	size_t chunk_data_len;   /* Length of chunk OID data */
@@ -103,6 +105,17 @@ static int parse_manifest_header(const void *buffer, unsigned long size,
 		header->total_size = strtoul(p, (char **)&p, 10);
 		if (p >= end || *p++ != '\n') {
 			error("manifest missing total size");
+			return -1;
+		}
+		
+		/* Parse content OID (complete file hash after filters) */
+		if (get_oid_hex_any(p, &header->content_oid) < 0) {
+			error("manifest missing or invalid content OID");
+			return -1;
+		}
+		p += hash_algos[GIT_HASH_SHA1].hexsz; /* Skip past OID hex string - TODO: support multiple hash algos */
+		if (p >= end || *p++ != '\n') {
+			error("manifest content OID not followed by newline");
 			return -1;
 		}
 		
@@ -365,7 +378,9 @@ int stream_manifest_to_fd_filtered(struct repository *r, int fd,
  * Returns 0 on success, -1 on error.
  */
 static int build_manifest_content(struct repository *r, struct strbuf *buf,
-                                 unsigned long total_size, size_t chunk_count,
+                                 unsigned long total_size,
+                                 const struct object_id *content_oid,
+                                 size_t chunk_count,
                                  const struct object_id *chunk_oids)
 {
 	int manifest_version;
@@ -396,11 +411,13 @@ static int build_manifest_content(struct repository *r, struct strbuf *buf,
 		 * Manifest format v1:
 		 * Line 1: Version number ("1")
 		 * Line 2: Total size of all chunks combined
-		 * Line 3: Number of chunks
-		 * Line 4+: Chunk OIDs (one per line)
+		 * Line 3: Content OID (complete file hash after filters)
+		 * Line 4: Number of chunks
+		 * Line 5+: Chunk OIDs (one per line)
 		 */
 		strbuf_addf(buf, "%d\n", manifest_version);
 		strbuf_addf(buf, "%lu\n", total_size);
+		strbuf_addf(buf, "%s\n", oid_to_hex(content_oid));
 		strbuf_addf(buf, "%zu\n", chunk_count);
 		
 		/* Add all chunk OIDs */
@@ -422,14 +439,16 @@ static int build_manifest_content(struct repository *r, struct strbuf *buf,
 }
 
 int write_manifest_object(struct repository *r, struct object_id *oid,
-                         unsigned long total_size, size_t chunk_count,
+                         unsigned long total_size,
+                         const struct object_id *content_oid,
+                         size_t chunk_count,
                          const struct object_id *chunk_oids)
 {
 	struct strbuf buf = STRBUF_INIT;
 	int ret;
 
 	/* Build the manifest content */
-	if (build_manifest_content(r, &buf, total_size, chunk_count, chunk_oids) < 0) {
+	if (build_manifest_content(r, &buf, total_size, content_oid, chunk_count, chunk_oids) < 0) {
 		strbuf_release(&buf);
 		return -1;
 	}
@@ -442,13 +461,15 @@ int write_manifest_object(struct repository *r, struct object_id *oid,
 }
 
 int hash_manifest_object(struct repository *r, struct object_id *oid,
-                        unsigned long total_size, size_t chunk_count,
+                        unsigned long total_size,
+                        const struct object_id *content_oid,
+                        size_t chunk_count,
                         const struct object_id *chunk_oids)
 {
 	struct strbuf buf = STRBUF_INIT;
 
 	/* Build the manifest content */
-	if (build_manifest_content(r, &buf, total_size, chunk_count, chunk_oids) < 0) {
+	if (build_manifest_content(r, &buf, total_size, content_oid, chunk_count, chunk_oids) < 0) {
 		strbuf_release(&buf);
 		return -1;
 	}
@@ -458,6 +479,31 @@ int hash_manifest_object(struct repository *r, struct object_id *oid,
 	strbuf_release(&buf);
 	
 	return 0;
+}
+
+int get_manifest_content_oid(struct repository *r,
+                             const struct object_id *manifest_oid,
+                             struct object_id *content_oid)
+{
+	struct manifest_header header;
+	void *manifest_buffer;
+	unsigned long manifest_size;
+	enum object_type type;
+	int ret = -1;
+	
+	/* Read manifest object */
+	manifest_buffer = odb_read_object(r->objects, manifest_oid, &type, &manifest_size);
+	if (!manifest_buffer || type != OBJ_MANIFEST)
+		return -1;
+	
+	/* Parse header to get content OID */
+	if (parse_manifest_header(manifest_buffer, manifest_size, &header) == 0) {
+		oidcpy(content_oid, &header.content_oid);
+		ret = 0;
+	}
+	
+	free(manifest_buffer);
+	return ret;
 }
 
 int get_manifest_chunk_oids(struct repository *r,

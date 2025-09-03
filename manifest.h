@@ -35,7 +35,9 @@ int parse_manifest_buffer(struct repository *r, struct manifest *item, void *buf
  * Returns 0 on success, -1 on error.
  **/
 int write_manifest_object(struct repository *r, struct object_id *oid,
-                         unsigned long total_size, size_t chunk_count,
+                         unsigned long total_size,
+                         const struct object_id *content_oid,
+                         size_t chunk_count,
                          const struct object_id *chunk_oids);
 
 /**
@@ -45,8 +47,19 @@ int write_manifest_object(struct repository *r, struct object_id *oid,
  * Returns 0 on success, -1 on error.
  **/
 int hash_manifest_object(struct repository *r, struct object_id *oid,
-                        unsigned long total_size, size_t chunk_count,
+                        unsigned long total_size,
+                        const struct object_id *content_oid,
+                        size_t chunk_count,
                         const struct object_id *chunk_oids);
+
+/**
+ * Get the content OID from a manifest object.
+ * This returns the OID representing the complete file content after filters.
+ * Returns 0 on success, -1 on error.
+ **/
+int get_manifest_content_oid(struct repository *r,
+                             const struct object_id *manifest_oid,
+                             struct object_id *content_oid);
 
 /**
  * Free the memory associated with a manifest's chunk list.

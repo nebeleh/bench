@@ -244,6 +244,33 @@ static int ce_compare_data(struct index_state *istate,
 	return match;
 }
 
+static int ce_compare_manifest_with_file(struct index_state *istate,
+					 const struct cache_entry *ce,
+					 struct stat *st)
+{
+	struct object_id manifest_content_oid;
+	int match = -1;
+	int fd;
+	
+	/* Get content OID from manifest */
+	if (get_manifest_content_oid(istate->repo, &ce->oid, &manifest_content_oid) < 0)
+		return 1; /* Error reading manifest - assume changed */
+	
+	/* Hash working tree file and compare with manifest's content OID */
+	fd = git_open_cloexec(ce->name, O_RDONLY);
+	if (fd >= 0) {
+		struct object_id file_oid;
+		/* Use Git's standard file hashing (includes filters) */
+		if (!index_fd(istate, &file_oid, fd, st, OBJ_BLOB, ce->name, 0)) {
+			/* Compare file hash with manifest's content hash */
+			match = !oideq(&file_oid, &manifest_content_oid);
+		}
+		/* index_fd() closed the file descriptor already */
+	}
+	
+	return match;
+}
+
 static int ce_compare_link(const struct cache_entry *ce, size_t expected_size)
 {
 	int match = -1;
@@ -291,11 +318,12 @@ static int ce_modified_check_fs(struct index_state *istate,
 	case S_IFREG:
 		/*
 		 * Special case: manifest in cache vs regular file in working tree.
-		 * Need to resolve manifest content for proper comparison.
+		 * Compare manifest content with file content via streaming.
 		 */
 		if (S_ISMANIFEST(ce->ce_mode)) {
-			/* TODO: Implement manifest content comparison with working tree */
-			return 0; /* For now, assume no change to fix racily clean issue */
+			if (ce_compare_manifest_with_file(istate, ce, st))
+				return DATA_CHANGED;
+			break;
 		}
 		if (ce_compare_data(istate, ce, st))
 			return DATA_CHANGED;
