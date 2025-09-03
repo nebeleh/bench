@@ -321,25 +321,26 @@ static int write_entry(struct cache_entry *ce, char *path, struct conv_attrs *ca
 
 	clone_checkout_metadata(&meta, &state->meta, &ce->oid);
 
+	/*
+	 * Try streaming for regular files when filters are present.
+	 * For small files or when streaming fails, fall back to
+	 * traditional load-into-memory approach in the switch statement.
+	 */
 	if (ce_mode_s_ifmt == S_IFREG) {
 		struct stream_filter *filter = get_stream_filter_ca(ca, &ce->oid);
 		if (filter &&
-		    !streaming_write_entry(ce, path, filter,
-					   state, to_tempfile,
-					   &fstat_done, &st))
+		    !streaming_write_entry(ce, path, filter, state, to_tempfile, &fstat_done, &st))
 			goto finish;
-		
-		/* Also try streaming for manifests even without a filter.
-		 * Manifests should preferably use streaming to avoid loading
-		 * large amounts of data into memory. */
-		if (!filter) {
-			enum object_type type = oid_object_info(the_repository, &ce->oid, NULL);
-			if (type == OBJ_MANIFEST &&
-			    !streaming_write_entry(ce, path, NULL,
-						  state, to_tempfile,
-						  &fstat_done, &st))
-				goto finish;
-		}
+	}
+	
+	/*
+	 * Always try streaming for manifests to handle large files efficiently.
+	 * Manifests should avoid loading terabytes into memory.
+	 */
+	if (ce_mode_s_ifmt == S_IFMANIFEST) {
+		struct stream_filter *filter = ca ? get_stream_filter_ca(ca, &ce->oid) : NULL;
+		if (!streaming_write_entry(ce, path, filter, state, to_tempfile, &fstat_done, &st))
+			goto finish;
 	}
 
 	switch (ce_mode_s_ifmt) {
@@ -364,6 +365,12 @@ static int write_entry(struct cache_entry *ce, char *path, struct conv_attrs *ca
 
 	case S_IFREG:
 		/*
+		 * Fallback for regular files when streaming is not available
+		 * or fails. Loads entire blob content into memory, applies
+		 * filters, then writes to working tree. Used mainly in Git
+		 * compatibility mode and for small files where streaming
+		 * overhead exceeds benefits.
+		 *
 		 * We do not send the blob in case of a retry, so do not
 		 * bother reading it at all.
 		 */
