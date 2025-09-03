@@ -6270,7 +6270,8 @@ static void diff_resolve_rename_copy(void)
 			p->status = DIFF_STATUS_ADDED;
 		else if (!DIFF_FILE_VALID(p->two))
 			p->status = DIFF_STATUS_DELETED;
-		else if (DIFF_PAIR_TYPE_CHANGED(p))
+		else if (repo_has_bench_extensions(the_repository) ? 
+			 DIFF_PAIR_TYPE_CHANGED_BENCH_MODE(p) : DIFF_PAIR_TYPE_CHANGED(p))
 			p->status = DIFF_STATUS_TYPE_CHANGED;
 
 		/* from this point on, we are dealing with a pair

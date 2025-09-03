@@ -126,6 +126,15 @@ struct diff_filepair {
 #define DIFF_PAIR_TYPE_CHANGED(p) \
 	((S_IFMT & (p)->one->mode) != (S_IFMT & (p)->two->mode))
 
+/*
+ * Bench-specific type change check that considers manifests equivalent to regular files.
+ * Use this in Bench repositories where manifests (index) and regular files (working tree)
+ * represent the same content type.
+ */
+#define DIFF_PAIR_TYPE_CHANGED_BENCH_MODE(p) \
+	(((S_IFMT & (p)->one->mode) != (S_IFMT & (p)->two->mode)) && \
+	 !(S_ISMANIFEST((p)->one->mode) && S_ISREG((p)->two->mode)))
+
 #define DIFF_PAIR_MODE_CHANGED(p) ((p)->one->mode != (p)->two->mode)
 
 void diff_free_filepair(struct diff_filepair *);

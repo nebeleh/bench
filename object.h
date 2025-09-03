@@ -179,6 +179,8 @@ static inline unsigned int create_ce_mode(unsigned int mode)
 		return S_IFDIR;
 	if (S_ISDIR(mode) || S_ISGITLINK(mode))
 		return S_IFGITLINK;
+	if (S_ISMANIFEST(mode))
+		return S_IFMANIFEST | ce_permissions(mode);
 	return S_IFREG | ce_permissions(mode);
 }
 
