@@ -301,7 +301,7 @@ void update_ce_after_write(const struct checkout *state, struct cache_entry *ce,
 	}
 }
 
-/* Note: ca is used (and required) iff the entry refers to a regular file. */
+/* Note: ca is used (and required) iff the entry refers to a regular file or manifest. */
 static int write_entry(struct cache_entry *ce, char *path, struct conv_attrs *ca,
 		       const struct checkout *state, int to_tempfile,
 		       int *nr_checkouts)
@@ -338,7 +338,7 @@ static int write_entry(struct cache_entry *ce, char *path, struct conv_attrs *ca
 	 * Manifests should avoid loading terabytes into memory.
 	 */
 	if (ce_mode_s_ifmt == S_IFMANIFEST) {
-		struct stream_filter *filter = ca ? get_stream_filter_ca(ca, &ce->oid) : NULL;
+		struct stream_filter *filter = get_stream_filter_ca(ca, &ce->oid);
 		if (!streaming_write_entry(ce, path, filter, state, to_tempfile, &fstat_done, &st))
 			goto finish;
 	}
@@ -538,7 +538,7 @@ int checkout_entry_ca(struct cache_entry *ce, struct conv_attrs *ca,
 	}
 
 	if (topath) {
-		if (S_ISREG(ce->ce_mode) && !ca) {
+		if ((S_ISREG(ce->ce_mode) || S_ISMANIFEST(ce->ce_mode)) && !ca) {
 			convert_attrs(state->istate, &ca_buf, ce->name);
 			ca = &ca_buf;
 		}
@@ -620,7 +620,7 @@ int checkout_entry_ca(struct cache_entry *ce, struct conv_attrs *ca,
 
 	create_directories(path.buf, path.len, state);
 
-	if (S_ISREG(ce->ce_mode) && !ca) {
+	if ((S_ISREG(ce->ce_mode) || S_ISMANIFEST(ce->ce_mode)) && !ca) {
 		convert_attrs(state->istate, &ca_buf, ce->name);
 		ca = &ca_buf;
 	}
