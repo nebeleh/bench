@@ -4244,11 +4244,18 @@ int diff_populate_filespec(struct repository *r,
 			die("unable to read %s", oid_to_hex(&s->oid));
 
 object_read:
-		/* Handle manifest objects - use logical size for binary detection */
+		/* Handle manifest objects with early size detection */
 		if (type == OBJ_MANIFEST) {
 			unsigned long logical_size;
-			if (!get_manifest_size(r, &s->oid, &logical_size))
+			if (!get_manifest_size(r, &s->oid, &logical_size)) {
 				s->size = logical_size;
+				/* Check if manifest content is too large for libxdiff */
+				if (logical_size > MAX_XDIFF_SIZE) {
+					/* Large file: mark as binary and skip content loading entirely */
+					s->is_binary = 1;
+					return 0;  /* Skip content population for large manifests */
+				}
+			}
 		}
 
 		if (size_only || check_binary) {
@@ -4267,15 +4274,18 @@ object_read:
 				die("unable to read %s", oid_to_hex(&s->oid));
 		}
 		
-		/* If we loaded raw manifest content, replace with actual file content */
+		/* For small manifests: load full content for normal diff */
 		if (type == OBJ_MANIFEST && s->data) {
-			unsigned long actual_size;
-			void *actual_content = read_manifest_content(r, &s->oid, &actual_size);
+			unsigned long actual_content_size;
+			void *actual_content = read_manifest_content(r, &s->oid, &actual_content_size);
 			if (actual_content) {
 				free(s->data);
 				s->data = actual_content;
-				s->size = actual_size;
+				s->size = actual_content_size;
 				s->should_free = 1;
+			} else {
+				error("unable to read manifest content for %s", s->path);
+				return -1;
 			}
 		}
 		s->should_free = 1;
