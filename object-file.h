@@ -190,6 +190,9 @@ struct input_stream {
 int stream_loose_object(struct input_stream *in_stream, size_t len,
 			struct object_id *oid);
 
+int stream_loose_object_with_type(struct input_stream *in_stream, size_t len,
+				  enum object_type type, struct object_id *oid);
+
 int force_object_loose(const struct object_id *oid, time_t mtime);
 
 /**

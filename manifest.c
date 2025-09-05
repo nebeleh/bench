@@ -109,11 +109,12 @@ static int parse_manifest_header(const void *buffer, unsigned long size,
 		}
 		
 		/* Parse content OID (complete file hash after filters) */
-		if (get_oid_hex_any(p, &header->content_oid) < 0) {
+		int algo_idx = get_oid_hex_any(p, &header->content_oid);
+		if (algo_idx == GIT_HASH_UNKNOWN) {
 			error("manifest missing or invalid content OID");
 			return -1;
 		}
-		p += hash_algos[GIT_HASH_SHA1].hexsz; /* Skip past OID hex string - TODO: support multiple hash algos */
+		p += hash_algos[algo_idx].hexsz;
 		if (p >= end || *p++ != '\n') {
 			error("manifest content OID not followed by newline");
 			return -1;

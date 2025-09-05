@@ -945,6 +945,12 @@ static int freshen_packed_object(const struct object_id *oid)
 int stream_loose_object(struct input_stream *in_stream, size_t len,
 			struct object_id *oid)
 {
+	return stream_loose_object_with_type(in_stream, len, OBJ_BLOB, oid);
+}
+
+int stream_loose_object_with_type(struct input_stream *in_stream, size_t len,
+				  enum object_type type, struct object_id *oid)
+{
 	const struct git_hash_algo *compat = the_repository->compat_hash_algo;
 	struct object_id compat_oid;
 	int fd, ret, err = 0, flush = 0;
@@ -962,7 +968,7 @@ int stream_loose_object(struct input_stream *in_stream, size_t len,
 
 	/* Since oid is not determined, save tmp file to odb path. */
 	strbuf_addf(&filename, "%s/", repo_get_object_directory(the_repository));
-	hdrlen = format_object_header(hdr, sizeof(hdr), OBJ_BLOB, len);
+	hdrlen = format_object_header(hdr, sizeof(hdr), type, len);
 
 	/*
 	 * Common steps for write_loose_object and stream_loose_object to

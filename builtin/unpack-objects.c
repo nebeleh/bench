@@ -435,6 +435,36 @@ static void stream_blob(unsigned long size, unsigned nr)
 	info->obj = NULL;
 }
 
+static void stream_manifest(unsigned long size, unsigned nr)
+{
+	git_zstream zstream = { 0 };
+	struct input_zstream_data data = { 0 };
+	struct input_stream in_stream = {
+		.read = feed_input_zstream,
+		.data = &data,
+	};
+	struct obj_info *info = &obj_list[nr];
+
+	data.zstream = &zstream;
+	git_inflate_init(&zstream);
+
+	if (stream_loose_object_with_type(&in_stream, size, OBJ_MANIFEST, &info->oid))
+		die(_("failed to write manifest object in stream"));
+
+	if (data.status != Z_STREAM_END)
+		die(_("inflate returned (%d)"), data.status);
+	git_inflate_end(&zstream);
+
+	if (strict) {
+		struct manifest *manifest = lookup_manifest(the_repository, &info->oid);
+
+		if (!manifest)
+			die(_("invalid manifest object from stream"));
+		manifest->object.flags |= FLAG_WRITTEN;
+	}
+	info->obj = NULL;
+}
+
 static int resolve_against_held(unsigned nr, const struct object_id *base,
 				void *delta_data, unsigned long delta_size)
 {
@@ -577,7 +607,12 @@ static void unpack_one(unsigned nr)
 		}
 		/* fallthrough */
 	case OBJ_MANIFEST:
-		/* TODO: Add manifest streaming support for large manifest objects */
+		if (!dry_run &&
+		    size > repo_settings_get_big_file_threshold(the_repository)) {
+			stream_manifest(size, nr);
+			return;
+		}
+		/* fallthrough */
 	case OBJ_COMMIT:
 	case OBJ_TREE:
 	case OBJ_TAG:
